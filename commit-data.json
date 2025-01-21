@@ -1,7 +1,7 @@
 {
-  "lastUpdate": "2025-01-21T04:28:16.000Z",
-  "commitCount": 63,
-  "message": "refactor :: simplify implementation",
+  "lastUpdate": "2025-01-21T02:58:56.000Z",
+  "commitCount": 64,
+  "message": "docs :: update README",
   "history": [
     {
       "date": "2026-01-10T00:58:58.000Z",
@@ -317,6 +317,11 @@
       "date": "2025-01-21T04:28:16.000Z",
       "message": "refactor :: simplify implementation",
       "timestamp": 1768997368272
+    },
+    {
+      "date": "2025-01-21T02:58:56.000Z",
+      "message": "docs :: update README",
+      "timestamp": 1768997368300
     }
   ]
 }
