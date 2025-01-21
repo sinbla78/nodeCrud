@@ -1,7 +1,7 @@
 {
-  "lastUpdate": "2025-01-21T13:47:40.000Z",
-  "commitCount": 70,
-  "message": "feat :: add user interface component",
+  "lastUpdate": "2025-01-21T08:24:43.000Z",
+  "commitCount": 71,
+  "message": "feat :: add helper functions",
   "history": [
     {
       "date": "2026-01-10T00:58:58.000Z",
@@ -352,6 +352,11 @@
       "date": "2025-01-21T13:47:40.000Z",
       "message": "feat :: add user interface component",
       "timestamp": 1768997376249
+    },
+    {
+      "date": "2025-01-21T08:24:43.000Z",
+      "message": "feat :: add helper functions",
+      "timestamp": 1768997376275
     }
   ]
 }
