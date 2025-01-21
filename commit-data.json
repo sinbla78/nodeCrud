@@ -1,7 +1,7 @@
 {
-  "lastUpdate": "2025-01-21T08:24:43.000Z",
-  "commitCount": 71,
-  "message": "feat :: add helper functions",
+  "lastUpdate": "2025-01-21T02:16:57.000Z",
+  "commitCount": 72,
+  "message": "refactor :: extract common logic",
   "history": [
     {
       "date": "2026-01-10T00:58:58.000Z",
@@ -357,6 +357,11 @@
       "date": "2025-01-21T08:24:43.000Z",
       "message": "feat :: add helper functions",
       "timestamp": 1768997376275
+    },
+    {
+      "date": "2025-01-21T02:16:57.000Z",
+      "message": "refactor :: extract common logic",
+      "timestamp": 1768997378223
     }
   ]
 }
