@@ -1,7 +1,7 @@
 {
-  "lastUpdate": "2025-01-22T11:46:19.000Z",
-  "commitCount": 84,
-  "message": "docs :: update documentation",
+  "lastUpdate": "2025-01-22T12:20:51.000Z",
+  "commitCount": 85,
+  "message": "fix :: handle edge case",
   "history": [
     {
       "date": "2026-01-10T00:58:58.000Z",
@@ -422,6 +422,11 @@
       "date": "2025-01-22T11:46:19.000Z",
       "message": "docs :: update documentation",
       "timestamp": 1769085391910
+    },
+    {
+      "date": "2025-01-22T12:20:51.000Z",
+      "message": "fix :: handle edge case",
+      "timestamp": 1769085391939
     }
   ]
 }
