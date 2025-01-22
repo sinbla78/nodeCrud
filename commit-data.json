@@ -1,7 +1,7 @@
 {
-  "lastUpdate": "2026-01-21T07:07:42.000Z",
-  "commitCount": 82,
-  "message": "docs :: add troubleshooting guide",
+  "lastUpdate": "2025-01-22T06:42:46.000Z",
+  "commitCount": 83,
+  "message": "refactor :: simplify implementation",
   "history": [
     {
       "date": "2026-01-10T00:58:58.000Z",
@@ -412,6 +412,11 @@
       "date": "2026-01-21T07:07:42.000Z",
       "message": "docs :: add troubleshooting guide",
       "timestamp": 1768997582245
+    },
+    {
+      "date": "2025-01-22T06:42:46.000Z",
+      "message": "refactor :: simplify implementation",
+      "timestamp": 1769085391883
     }
   ]
 }
