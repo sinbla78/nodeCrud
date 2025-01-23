@@ -1,7 +1,7 @@
 {
-  "lastUpdate": "2025-01-22T05:03:30.000Z",
-  "commitCount": 92,
-  "message": "fix :: resolve type error",
+  "lastUpdate": "2025-01-23T12:38:52.000Z",
+  "commitCount": 93,
+  "message": "refactor :: simplify implementation",
   "history": [
     {
       "date": "2026-01-10T00:58:58.000Z",
@@ -462,6 +462,11 @@
       "date": "2025-01-22T05:03:30.000Z",
       "message": "fix :: resolve type error",
       "timestamp": 1769085396952
+    },
+    {
+      "date": "2025-01-23T12:38:52.000Z",
+      "message": "refactor :: simplify implementation",
+      "timestamp": 1769170594843
     }
   ]
 }
