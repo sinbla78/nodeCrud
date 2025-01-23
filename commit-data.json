@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2025-01-23T12:25:30.000Z",
-  "commitCount": 100,
-  "message": "docs :: add code comments",
+  "lastUpdate": "2025-01-23T08:31:20.000Z",
+  "commitCount": 101,
+  "message": "docs :: update changelog",
   "history": [
-    {
-      "date": "2026-01-10T00:58:58.000Z",
-      "message": "Resolve edge case",
-      "timestamp": 1768911991316
-    },
     {
       "date": "2026-01-10T06:27:38.000Z",
       "message": "Fix validation error",
@@ -502,6 +497,11 @@
       "date": "2025-01-23T12:25:30.000Z",
       "message": "docs :: add code comments",
       "timestamp": 1769170600655
+    },
+    {
+      "date": "2025-01-23T08:31:20.000Z",
+      "message": "docs :: update changelog",
+      "timestamp": 1769170600677
     }
   ]
 }
