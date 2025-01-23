@@ -1,7 +1,7 @@
 {
-  "lastUpdate": "2025-01-23T03:06:38.000Z",
-  "commitCount": 99,
-  "message": "fix :: resolve race condition",
+  "lastUpdate": "2025-01-23T12:25:30.000Z",
+  "commitCount": 100,
+  "message": "docs :: add code comments",
   "history": [
     {
       "date": "2026-01-10T00:58:58.000Z",
@@ -497,6 +497,11 @@
       "date": "2025-01-23T03:06:38.000Z",
       "message": "fix :: resolve race condition",
       "timestamp": 1769170600619
+    },
+    {
+      "date": "2025-01-23T12:25:30.000Z",
+      "message": "docs :: add code comments",
+      "timestamp": 1769170600655
     }
   ]
 }
