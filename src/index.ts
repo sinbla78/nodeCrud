@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import authRouter from "./routes/auth";
 import testRouter from "./routes/test";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./swagger";
 
 // connect-redis v6.1.3 방식
 const RedisStore = require("connect-redis")(session);
@@ -53,6 +55,7 @@ app.use(
 // 라우터 연결
 app.use("/auth", authRouter);
 app.use("/test", testRouter);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // DB와 Redis 연결 후 서버 시작
 Promise.all([connectMongo(), redisClient.ping()])
