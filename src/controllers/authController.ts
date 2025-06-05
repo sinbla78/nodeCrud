@@ -7,7 +7,7 @@ import { User } from "../models/user";
  * /auth/register:
  *   post:
  *     summary: 사용자 회원가입
- *     description: 새로운 사용자를 MongoDB에 등록합니다.
+ *     description: 새로운 사용자를 MongoDB에 등록합니다..
  *     tags: [Auth]
  *     requestBody:
  *       required: true
