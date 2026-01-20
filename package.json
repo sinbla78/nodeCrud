@@ -196,7 +196,10 @@
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "commit:auto": "ts-node src/autoCommit.ts"
+    "commit:auto": "ts-node src/services/autoCommit/index.ts",
+    "commit:help": "ts-node src/services/autoCommit/index.ts --help",
+    "commit:reset": "ts-node src/services/autoCommit/index.ts --reset",
+    "commit:dry": "ts-node src/services/autoCommit/index.ts --dry-run"
   },
   "repository": {
     "type": "git",
