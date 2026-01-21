@@ -1,7 +1,7 @@
 {
-  "lastUpdate": "2026-01-21T12:28:52.000Z",
-  "commitCount": 81,
-  "message": "ci :: configure CI/CD",
+  "lastUpdate": "2026-01-21T07:07:42.000Z",
+  "commitCount": 82,
+  "message": "docs :: add troubleshooting guide",
   "history": [
     {
       "date": "2026-01-10T00:58:58.000Z",
@@ -407,6 +407,11 @@
       "date": "2026-01-21T12:28:52.000Z",
       "message": "ci :: configure CI/CD",
       "timestamp": 1768997582224
+    },
+    {
+      "date": "2026-01-21T07:07:42.000Z",
+      "message": "docs :: add troubleshooting guide",
+      "timestamp": 1768997582245
     }
   ]
 }
