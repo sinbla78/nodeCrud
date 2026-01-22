@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-22T06:20:45.000Z",
-  "commitCount": 118,
-  "message": "chore :: update configuration",
+  "lastUpdate": "2026-01-22T09:06:14.000Z",
+  "commitCount": 119,
+  "message": "docs :: add troubleshooting guide",
   "history": [
-    {
-      "date": "2026-01-13T03:28:28.000Z",
-      "message": "Add unit tests",
-      "timestamp": 1768911991769
-    },
     {
       "date": "2026-01-14T07:42:33.000Z",
       "message": "Extract common logic",
@@ -502,6 +497,11 @@
       "date": "2026-01-22T06:20:45.000Z",
       "message": "chore :: update configuration",
       "timestamp": 1769170649816
+    },
+    {
+      "date": "2026-01-22T09:06:14.000Z",
+      "message": "docs :: add troubleshooting guide",
+      "timestamp": 1769170651270
     }
   ]
 }
