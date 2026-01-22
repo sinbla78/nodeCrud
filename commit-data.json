@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-22T03:58:21.000Z",
-  "commitCount": 116,
-  "message": "docs :: update changelog",
+  "lastUpdate": "2026-01-22T09:49:55.000Z",
+  "commitCount": 117,
+  "message": "feat :: add API endpoint",
   "history": [
-    {
-      "date": "2026-01-12T03:48:35.000Z",
-      "message": "Update configuration",
-      "timestamp": 1768911991726
-    },
     {
       "date": "2026-01-12T01:42:20.000Z",
       "message": "Update tsconfig",
@@ -502,6 +497,11 @@
       "date": "2026-01-22T03:58:21.000Z",
       "message": "docs :: update changelog",
       "timestamp": 1769170649763
+    },
+    {
+      "date": "2026-01-22T09:49:55.000Z",
+      "message": "feat :: add API endpoint",
+      "timestamp": 1769170649794
     }
   ]
 }
