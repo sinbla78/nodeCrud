@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-24T08:27:19.000Z",
-  "commitCount": 127,
-  "message": "chore :: add gitignore entries",
+  "lastUpdate": "2026-01-24T04:27:19.000Z",
+  "commitCount": 128,
+  "message": "docs :: update contributing guide",
   "history": [
-    {
-      "date": "2026-01-16T09:06:21.000Z",
-      "message": "Add unit tests",
-      "timestamp": 1768911992013
-    },
     {
       "date": "2026-01-16T08:54:13.000Z",
       "message": "Add integration tests",
@@ -502,6 +497,11 @@
       "date": "2026-01-24T08:27:19.000Z",
       "message": "chore :: add gitignore entries",
       "timestamp": 1769255258452
+    },
+    {
+      "date": "2026-01-24T04:27:19.000Z",
+      "message": "docs :: update contributing guide",
+      "timestamp": 1769255258474
     }
   ]
 }
