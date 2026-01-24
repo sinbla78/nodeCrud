@@ -282,6 +282,11 @@
       word-break: break-word;
     }
 
+    .chat-message.mine {
+      background: rgba(59, 130, 246, 0.3);
+      border-left: 3px solid #3b82f6;
+    }
+
     .chat-input-container {
       padding: 12px;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -739,9 +744,10 @@
     // Chat
     function addChatMessage(data) {
       const msg = document.createElement('div');
-      msg.className = 'chat-message';
+      const isMine = data.user.id === socket.id;
+      msg.className = 'chat-message' + (isMine ? ' mine' : '');
       msg.innerHTML = `
-        <div class="name" style="color: ${data.user.color}">${data.user.name}</div>
+        <div class="name" style="color: ${data.user.color}">${data.user.name}${isMine ? ' (나)' : ''}</div>
         <div class="text">${escapeHtml(data.message)}</div>
       `;
       chatMessagesEl.appendChild(msg);
