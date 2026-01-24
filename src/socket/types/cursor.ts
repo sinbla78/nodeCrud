@@ -48,11 +48,13 @@ export interface DrawPayload {
 }
 
 export interface DrawData {
+  id: string;
   user: UserInfo;
   from: CursorPosition;
   to: CursorPosition;
   color: string;
   width: number;
+  timestamp: number;
 }
 
 export interface ClearCanvasPayload {

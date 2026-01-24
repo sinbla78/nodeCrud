@@ -526,10 +526,12 @@
 
     // Drawing state
     const DRAW_COLORS = ['#ffffff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#ff69b4'];
+    const DRAW_EXPIRE_MS = 10000; // 10초 후 사라짐
     let drawColor = '#ffffff';
     let brushSize = 3;
     let isDrawing = false;
     let lastPos = null;
+    const drawings = new Map(); // id -> {from, to, color, width, timestamp}
 
     // Initialize canvas
     function resizeCanvas() {
@@ -595,16 +597,30 @@
     });
 
     socket.on('draw:line', (data) => {
-      drawLine(data.from, data.to, data.color, data.width);
+      drawings.set(data.id, {
+        from: data.from,
+        to: data.to,
+        color: data.color,
+        width: data.width,
+        timestamp: data.timestamp
+      });
     });
 
     socket.on('draw:history', (lines) => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      lines.forEach(line => drawLine(line.from, line.to, line.color, line.width));
+      drawings.clear();
+      lines.forEach(line => {
+        drawings.set(line.id, {
+          from: line.from,
+          to: line.to,
+          color: line.color,
+          width: line.width,
+          timestamp: line.timestamp
+        });
+      });
     });
 
     socket.on('draw:cleared', () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawings.clear();
     });
 
     socket.on('room:list', (rooms) => {
@@ -679,8 +695,9 @@
     }
 
     // Drawing
-    function drawLine(from, to, color, width) {
+    function drawLine(from, to, color, width, opacity = 1) {
       ctx.beginPath();
+      ctx.globalAlpha = opacity;
       ctx.strokeStyle = color;
       ctx.lineWidth = width;
       ctx.lineCap = 'round';
@@ -688,7 +705,32 @@
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
       ctx.stroke();
+      ctx.globalAlpha = 1;
     }
+
+    // 애니메이션 루프 - 그림 페이드 아웃
+    function renderCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const now = Date.now();
+
+      drawings.forEach((drawing, id) => {
+        const age = now - drawing.timestamp;
+        if (age >= DRAW_EXPIRE_MS) {
+          drawings.delete(id);
+          return;
+        }
+        // 마지막 3초 동안 페이드 아웃
+        const fadeStart = DRAW_EXPIRE_MS - 3000;
+        let opacity = 1;
+        if (age > fadeStart) {
+          opacity = 1 - ((age - fadeStart) / 3000);
+        }
+        drawLine(drawing.from, drawing.to, drawing.color, drawing.width, opacity);
+      });
+
+      requestAnimationFrame(renderCanvas);
+    }
+    renderCanvas();
 
     canvas.addEventListener('mousedown', (e) => {
       isDrawing = true;
@@ -698,7 +740,6 @@
     canvas.addEventListener('mousemove', (e) => {
       if (!isDrawing || !lastPos) return;
       const currentPos = { x: e.clientX, y: e.clientY };
-      drawLine(lastPos, currentPos, drawColor, brushSize);
       socket.emit('draw:line', {
         from: lastPos,
         to: currentPos,
@@ -719,7 +760,7 @@
     });
 
     function clearCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawings.clear();
       socket.emit('draw:clear');
     }
 
@@ -792,7 +833,7 @@
         currentRoom = newRoom;
         cursors.forEach((data, id) => data.element.remove());
         cursors.clear();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawings.clear();
         chatMessagesEl.innerHTML = '';
         socket.emit('cursor:join', { roomId: currentRoom });
         roomNameEl.textContent = currentRoom;

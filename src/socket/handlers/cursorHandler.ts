@@ -23,6 +23,7 @@ interface RoomData {
 const rooms = new Map<string, RoomData>();
 const MAX_CHAT_HISTORY = 50;
 const MAX_DRAW_HISTORY = 500;
+const DRAW_EXPIRE_MS = 10000; // 10초 후 그림 사라짐
 
 function getOrCreateRoom(roomId: string): RoomData {
   if (!rooms.has(roomId)) {
@@ -144,23 +145,28 @@ export function setupCursorHandler(
   socket.on('draw:line', (payload: DrawPayload) => {
     if (!currentRoom || !userData) return;
 
+    const now = Date.now();
     const drawData: DrawData = {
+      id: `${socket.id}-${now}-${Math.random().toString(36).substr(2, 9)}`,
       user: userData.user,
       from: payload.from,
       to: payload.to,
       color: payload.color,
-      width: payload.width
+      width: payload.width,
+      timestamp: now
     };
 
     const room = rooms.get(currentRoom);
     if (room) {
+      // 만료된 그림 제거
+      room.drawHistory = room.drawHistory.filter(d => now - d.timestamp < DRAW_EXPIRE_MS);
       room.drawHistory.push(drawData);
       if (room.drawHistory.length > MAX_DRAW_HISTORY) {
         room.drawHistory.shift();
       }
     }
 
-    socket.to(currentRoom).emit('draw:line', drawData);
+    io.to(currentRoom).emit('draw:line', drawData);
   });
 
   socket.on('draw:clear', () => {
