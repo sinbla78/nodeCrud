@@ -222,6 +222,37 @@
       background: #dc2626;
     }
 
+    .fade-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      font-size: 12px;
+    }
+
+    .fade-toggle input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .fade-time {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      font-size: 12px;
+    }
+
+    .fade-time select {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
     /* Chat Panel */
     .chat-panel {
       position: fixed;
@@ -466,6 +497,20 @@
       <span>굵기</span>
       <input type="range" id="brushSize" min="1" max="20" value="3">
     </div>
+    <div class="fade-toggle">
+      <input type="checkbox" id="fadeToggle" checked>
+      <span>자동 지우기</span>
+    </div>
+    <div class="fade-time" id="fadeTimeContainer">
+      <span>시간</span>
+      <select id="fadeTime">
+        <option value="5000">5초</option>
+        <option value="10000" selected>10초</option>
+        <option value="20000">20초</option>
+        <option value="30000">30초</option>
+        <option value="60000">1분</option>
+      </select>
+    </div>
     <button class="clear-btn" onclick="clearCanvas()">캔버스 지우기</button>
   </div>
 
@@ -526,12 +571,13 @@
 
     // Drawing state
     const DRAW_COLORS = ['#ffffff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#ff69b4'];
-    const DRAW_EXPIRE_MS = 10000; // 10초 후 사라짐
+    let drawExpireMs = 10000;
+    let fadeEnabled = true;
     let drawColor = '#ffffff';
     let brushSize = 3;
     let isDrawing = false;
     let lastPos = null;
-    const drawings = new Map(); // id -> {from, to, color, width, timestamp}
+    const drawings = new Map();
 
     // Initialize canvas
     function resizeCanvas() {
@@ -557,6 +603,19 @@
 
     document.getElementById('brushSize').addEventListener('input', (e) => {
       brushSize = parseInt(e.target.value);
+    });
+
+    const fadeToggleEl = document.getElementById('fadeToggle');
+    const fadeTimeEl = document.getElementById('fadeTime');
+    const fadeTimeContainerEl = document.getElementById('fadeTimeContainer');
+
+    fadeToggleEl.addEventListener('change', (e) => {
+      fadeEnabled = e.target.checked;
+      fadeTimeContainerEl.style.opacity = fadeEnabled ? '1' : '0.5';
+    });
+
+    fadeTimeEl.addEventListener('change', (e) => {
+      drawExpireMs = parseInt(e.target.value);
     });
 
     // Socket events
@@ -714,18 +773,21 @@
       const now = Date.now();
 
       drawings.forEach((drawing, id) => {
-        const age = now - drawing.timestamp;
-        if (age >= DRAW_EXPIRE_MS) {
-          drawings.delete(id);
-          return;
+        if (fadeEnabled) {
+          const age = now - drawing.timestamp;
+          if (age >= drawExpireMs) {
+            drawings.delete(id);
+            return;
+          }
+          const fadeStart = drawExpireMs * 0.7;
+          let opacity = 1;
+          if (age > fadeStart) {
+            opacity = 1 - ((age - fadeStart) / (drawExpireMs * 0.3));
+          }
+          drawLine(drawing.from, drawing.to, drawing.color, drawing.width, opacity);
+        } else {
+          drawLine(drawing.from, drawing.to, drawing.color, drawing.width, 1);
         }
-        // 마지막 3초 동안 페이드 아웃
-        const fadeStart = DRAW_EXPIRE_MS - 3000;
-        let opacity = 1;
-        if (age > fadeStart) {
-          opacity = 1 - ((age - fadeStart) / 3000);
-        }
-        drawLine(drawing.from, drawing.to, drawing.color, drawing.width, opacity);
       });
 
       requestAnimationFrame(renderCanvas);
