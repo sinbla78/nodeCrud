@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-24T04:27:19.000Z",
-  "commitCount": 128,
-  "message": "docs :: update contributing guide",
+  "lastUpdate": "2026-01-24T11:23:13.000Z",
+  "commitCount": 129,
+  "message": "chore :: update tsconfig",
   "history": [
-    {
-      "date": "2026-01-16T08:54:13.000Z",
-      "message": "Add integration tests",
-      "timestamp": 1768911992034
-    },
     {
       "date": "2026-01-16T07:59:37.000Z",
       "message": "Add edge case tests",
@@ -502,6 +497,11 @@
       "date": "2026-01-24T04:27:19.000Z",
       "message": "docs :: update contributing guide",
       "timestamp": 1769255258474
+    },
+    {
+      "date": "2026-01-24T11:23:13.000Z",
+      "message": "chore :: update tsconfig",
+      "timestamp": 1769255258494
     }
   ]
 }
