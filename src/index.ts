@@ -5,7 +5,7 @@ import { initializeSocket } from './config/socket';
 
 const app = express();
 const httpServer = createServer(app);
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 
 initializeSocket(httpServer);
 
