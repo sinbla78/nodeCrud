@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Cursor</title>
+  <title>Live Cursor - Collaborative Space</title>
   <style>
     * {
       margin: 0;
@@ -19,6 +19,17 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
+    /* Canvas */
+    #drawCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    /* Cursors */
     .cursor {
       position: absolute;
       pointer-events: none;
@@ -44,6 +55,41 @@
       font-weight: 500;
     }
 
+    /* Click Effect */
+    .click-effect {
+      position: absolute;
+      pointer-events: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      animation: clickRipple 0.6s ease-out forwards;
+      z-index: 999;
+    }
+
+    @keyframes clickRipple {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    }
+
+    /* Cursor Trail */
+    .cursor-trail {
+      position: absolute;
+      pointer-events: none;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      opacity: 0.6;
+      z-index: 998;
+      animation: trailFade 0.5s ease-out forwards;
+    }
+
+    @keyframes trailFade {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    /* Status Bar */
     .status-bar {
       position: fixed;
       top: 20px;
@@ -57,8 +103,9 @@
       font-size: 14px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       border: 1px solid rgba(255, 255, 255, 0.2);
+      z-index: 1001;
     }
 
     .status-dot {
@@ -74,11 +121,22 @@
       50% { opacity: 0.5; }
     }
 
+    .room-name {
+      padding: 4px 12px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .room-name:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* My Info */
     .my-info {
       position: fixed;
       bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 20px;
       background: rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(10px);
       padding: 12px 24px;
@@ -86,6 +144,7 @@
       color: white;
       font-size: 14px;
       border: 1px solid rgba(255, 255, 255, 0.2);
+      z-index: 1001;
     }
 
     .color-indicator {
@@ -97,31 +156,344 @@
       vertical-align: middle;
     }
 
+    /* Drawing Tools */
+    .draw-tools {
+      position: fixed;
+      top: 80px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1001;
+    }
+
+    .color-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      max-width: 120px;
+    }
+
+    .color-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .color-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .color-btn.active {
+      border-color: white;
+    }
+
+    .brush-size {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      font-size: 12px;
+    }
+
+    .brush-size input {
+      width: 80px;
+    }
+
+    .clear-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .clear-btn:hover {
+      background: #dc2626;
+    }
+
+    /* Chat Panel */
+    .chat-panel {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 320px;
+      height: 400px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      z-index: 1001;
+    }
+
+    .chat-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-toggle {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .chat-message {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .chat-message .name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .chat-message .text {
+      color: rgba(255, 255, 255, 0.9);
+      word-break: break-word;
+    }
+
+    .chat-input-container {
+      padding: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+    }
+
+    .chat-input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .chat-send {
+      background: #3b82f6;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .chat-send:hover {
+      background: #2563eb;
+    }
+
+    .chat-panel.minimized {
+      height: auto;
+    }
+
+    .chat-panel.minimized .chat-messages,
+    .chat-panel.minimized .chat-input-container {
+      display: none;
+    }
+
+    /* Room Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: #1e293b;
+      padding: 24px;
+      border-radius: 16px;
+      width: 400px;
+      max-width: 90%;
+    }
+
+    .modal h2 {
+      color: white;
+      margin-bottom: 16px;
+    }
+
+    .modal input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 12px;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .modal input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .modal-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .modal-btn.primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .modal-btn.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .room-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+    }
+
+    .room-item {
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .room-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .room-item .count {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Instructions */
     .instructions {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: rgba(255, 255, 255, 0.3);
-      font-size: 18px;
+      color: rgba(255, 255, 255, 0.2);
+      font-size: 16px;
       text-align: center;
       pointer-events: none;
+      z-index: 0;
+    }
+
+    #cursors {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
     }
   </style>
 </head>
 <body>
+  <canvas id="drawCanvas"></canvas>
+
   <div class="status-bar">
     <div class="status-dot"></div>
     <span>접속자: <strong id="userCount">1</strong>명</span>
+    <div class="room-name" id="roomName" onclick="openRoomModal()">main</div>
+  </div>
+
+  <div class="draw-tools">
+    <div class="color-picker" id="colorPicker"></div>
+    <div class="brush-size">
+      <span>굵기</span>
+      <input type="range" id="brushSize" min="1" max="20" value="3">
+    </div>
+    <button class="clear-btn" onclick="clearCanvas()">캔버스 지우기</button>
   </div>
 
   <div class="instructions">
-    마우스를 움직여 보세요<br>
-    여러 브라우저 탭에서 접속하면 커서가 공유됩니다
+    마우스를 움직여 커서를 공유하세요<br>
+    드래그하여 그림을 그리세요<br>
+    클릭하면 이펙트가 표시됩니다
   </div>
 
-  <div class="my-info" id="myInfo">
-    연결 중...
+  <div class="my-info" id="myInfo">연결 중...</div>
+
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+      <span>채팅</span>
+      <button class="chat-toggle" onclick="toggleChat()">−</button>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-container">
+      <input type="text" class="chat-input" id="chatInput" placeholder="메시지 입력..." maxlength="500">
+      <button class="chat-send" onclick="sendChat()">전송</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="roomModal">
+    <div class="modal">
+      <h2>룸 선택</h2>
+      <div class="room-list" id="roomList"></div>
+      <input type="text" id="roomInput" placeholder="새 룸 이름 입력...">
+      <div class="modal-buttons">
+        <button class="modal-btn secondary" onclick="closeRoomModal()">취소</button>
+        <button class="modal-btn primary" onclick="joinRoom()">입장</button>
+      </div>
+    </div>
   </div>
 
   <div id="cursors"></div>
@@ -132,56 +504,123 @@
     const cursorsContainer = document.getElementById('cursors');
     const userCountEl = document.getElementById('userCount');
     const myInfoEl = document.getElementById('myInfo');
+    const roomNameEl = document.getElementById('roomName');
+    const chatMessagesEl = document.getElementById('chatMessages');
+    const chatInputEl = document.getElementById('chatInput');
+    const chatPanelEl = document.getElementById('chatPanel');
+    const roomModalEl = document.getElementById('roomModal');
+    const roomListEl = document.getElementById('roomList');
+    const roomInputEl = document.getElementById('roomInput');
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+
     const cursors = new Map();
+    let currentRoom = new URLSearchParams(window.location.search).get('room') || 'main';
+    let myColor = '#ffffff';
+    let myUserInfo = null;
 
-    const roomId = 'main';
+    // Drawing state
+    const DRAW_COLORS = ['#ffffff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#ff69b4'];
+    let drawColor = '#ffffff';
+    let brushSize = 3;
+    let isDrawing = false;
+    let lastPos = null;
 
+    // Initialize canvas
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Initialize color picker
+    const colorPickerEl = document.getElementById('colorPicker');
+    DRAW_COLORS.forEach(color => {
+      const btn = document.createElement('button');
+      btn.className = 'color-btn' + (color === drawColor ? ' active' : '');
+      btn.style.background = color;
+      btn.onclick = () => {
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        drawColor = color;
+      };
+      colorPickerEl.appendChild(btn);
+    });
+
+    document.getElementById('brushSize').addEventListener('input', (e) => {
+      brushSize = parseInt(e.target.value);
+    });
+
+    // Socket events
     socket.on('connect', () => {
-      socket.emit('cursor:join', { roomId });
+      socket.emit('cursor:join', { roomId: currentRoom });
+      roomNameEl.textContent = currentRoom;
     });
 
     socket.on('cursor:users', (users) => {
-      users.forEach(user => {
-        createCursor(user);
-      });
+      users.forEach(createCursor);
     });
 
     socket.on('cursor:joined', (data) => {
-      createCursor(data);
       if (data.user.id === socket.id) {
+        myUserInfo = data.user;
+        myColor = data.user.color;
         myInfoEl.innerHTML = `
           <span class="color-indicator" style="background: ${data.user.color}"></span>
           ${data.user.name}
         `;
+      } else {
+        createCursor(data);
       }
     });
 
-    socket.on('cursor:moved', (data) => {
-      updateCursor(data);
+    socket.on('cursor:moved', updateCursor);
+    socket.on('cursor:left', removeCursor);
+    socket.on('room:count', (count) => userCountEl.textContent = count);
+
+    socket.on('cursor:clicked', (data) => {
+      createClickEffect(data.position.x, data.position.y, data.color);
     });
 
-    socket.on('cursor:left', (userId) => {
-      removeCursor(userId);
+    socket.on('chat:message', addChatMessage);
+    socket.on('chat:history', (messages) => {
+      chatMessagesEl.innerHTML = '';
+      messages.forEach(addChatMessage);
     });
 
-    socket.on('room:count', (count) => {
-      userCountEl.textContent = count;
+    socket.on('draw:line', (data) => {
+      drawLine(data.from, data.to, data.color, data.width);
     });
 
+    socket.on('draw:history', (lines) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      lines.forEach(line => drawLine(line.from, line.to, line.color, line.width));
+    });
+
+    socket.on('draw:cleared', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    socket.on('room:list', (rooms) => {
+      roomListEl.innerHTML = '';
+      rooms.forEach(room => {
+        const item = document.createElement('div');
+        item.className = 'room-item';
+        item.innerHTML = `<span>${room.id}</span><span class="count">${room.userCount}명</span>`;
+        item.onclick = () => {
+          roomInputEl.value = room.id;
+        };
+        roomListEl.appendChild(item);
+      });
+    });
+
+    // Cursor functions
     function createCursor(data) {
-      if (data.user.id === socket.id) {
-        myInfoEl.innerHTML = `
-          <span class="color-indicator" style="background: ${data.user.color}"></span>
-          ${data.user.name}
-        `;
-        return;
-      }
-
-      if (cursors.has(data.user.id)) return;
+      if (data.user.id === socket.id || cursors.has(data.user.id)) return;
 
       const cursor = document.createElement('div');
       cursor.className = 'cursor';
-      cursor.id = `cursor-${data.user.id}`;
       cursor.innerHTML = `
         <svg class="cursor-pointer" viewBox="0 0 24 24" fill="${data.user.color}">
           <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.48 0 .72-.58.38-.92L5.94 2.86a.5.5 0 0 0-.44.35z"/>
@@ -190,39 +629,178 @@
       `;
       cursor.style.transform = `translate(${data.position.x}px, ${data.position.y}px)`;
       cursorsContainer.appendChild(cursor);
-      cursors.set(data.user.id, cursor);
+      cursors.set(data.user.id, { element: cursor, color: data.user.color });
     }
 
     function updateCursor(data) {
-      let cursor = cursors.get(data.user.id);
-      if (!cursor) {
+      let cursorData = cursors.get(data.user.id);
+      if (!cursorData) {
         createCursor(data);
-        cursor = cursors.get(data.user.id);
+        cursorData = cursors.get(data.user.id);
       }
-      if (cursor) {
-        cursor.style.transform = `translate(${data.position.x}px, ${data.position.y}px)`;
+      if (cursorData) {
+        cursorData.element.style.transform = `translate(${data.position.x}px, ${data.position.y}px)`;
+        createCursorTrail(data.position.x, data.position.y, cursorData.color);
       }
     }
 
     function removeCursor(userId) {
-      const cursor = cursors.get(userId);
-      if (cursor) {
-        cursor.remove();
+      const cursorData = cursors.get(userId);
+      if (cursorData) {
+        cursorData.element.remove();
         cursors.delete(userId);
       }
     }
 
+    // Effects
+    function createClickEffect(x, y, color) {
+      const effect = document.createElement('div');
+      effect.className = 'click-effect';
+      effect.style.left = x + 'px';
+      effect.style.top = y + 'px';
+      effect.style.border = `3px solid ${color}`;
+      document.body.appendChild(effect);
+      setTimeout(() => effect.remove(), 600);
+    }
+
+    function createCursorTrail(x, y, color) {
+      const trail = document.createElement('div');
+      trail.className = 'cursor-trail';
+      trail.style.left = (x + 10) + 'px';
+      trail.style.top = (y + 10) + 'px';
+      trail.style.background = color;
+      document.body.appendChild(trail);
+      setTimeout(() => trail.remove(), 500);
+    }
+
+    // Drawing
+    function drawLine(from, to, color, width) {
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      lastPos = { x: e.clientX, y: e.clientY };
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing || !lastPos) return;
+      const currentPos = { x: e.clientX, y: e.clientY };
+      drawLine(lastPos, currentPos, drawColor, brushSize);
+      socket.emit('draw:line', {
+        from: lastPos,
+        to: currentPos,
+        color: drawColor,
+        width: brushSize
+      });
+      lastPos = currentPos;
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      isDrawing = false;
+      lastPos = null;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      isDrawing = false;
+      lastPos = null;
+    });
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      socket.emit('draw:clear');
+    }
+
+    // Mouse tracking
     let lastEmit = 0;
     const THROTTLE_MS = 16;
 
     document.addEventListener('mousemove', (e) => {
       const now = Date.now();
       if (now - lastEmit >= THROTTLE_MS) {
-        socket.emit('cursor:move', {
-          position: { x: e.clientX, y: e.clientY }
-        });
+        socket.emit('cursor:move', { position: { x: e.clientX, y: e.clientY } });
         lastEmit = now;
       }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.chat-panel, .draw-tools, .status-bar, .modal-overlay, .my-info')) return;
+      socket.emit('cursor:click', { position: { x: e.clientX, y: e.clientY } });
+      createClickEffect(e.clientX, e.clientY, myColor);
+    });
+
+    // Chat
+    function addChatMessage(data) {
+      const msg = document.createElement('div');
+      msg.className = 'chat-message';
+      msg.innerHTML = `
+        <div class="name" style="color: ${data.user.color}">${data.user.name}</div>
+        <div class="text">${escapeHtml(data.message)}</div>
+      `;
+      chatMessagesEl.appendChild(msg);
+      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+    }
+
+    function sendChat() {
+      const message = chatInputEl.value.trim();
+      if (!message) return;
+      socket.emit('chat:send', { message });
+      chatInputEl.value = '';
+    }
+
+    chatInputEl.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendChat();
+    });
+
+    function toggleChat() {
+      chatPanelEl.classList.toggle('minimized');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Room
+    function openRoomModal() {
+      socket.emit('room:list');
+      roomModalEl.classList.add('active');
+      roomInputEl.value = '';
+    }
+
+    function closeRoomModal() {
+      roomModalEl.classList.remove('active');
+    }
+
+    function joinRoom() {
+      const newRoom = roomInputEl.value.trim() || 'main';
+      if (newRoom !== currentRoom) {
+        currentRoom = newRoom;
+        cursors.forEach((data, id) => data.element.remove());
+        cursors.clear();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        chatMessagesEl.innerHTML = '';
+        socket.emit('cursor:join', { roomId: currentRoom });
+        roomNameEl.textContent = currentRoom;
+        window.history.pushState({}, '', `?room=${encodeURIComponent(currentRoom)}`);
+      }
+      closeRoomModal();
+    }
+
+    roomInputEl.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') joinRoom();
+    });
+
+    roomModalEl.addEventListener('click', (e) => {
+      if (e.target === roomModalEl) closeRoomModal();
     });
   </script>
 </body>
