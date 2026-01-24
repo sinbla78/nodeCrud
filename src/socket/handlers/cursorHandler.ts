@@ -66,7 +66,7 @@ export function setupCursorHandler(
   let userData: CursorData | null = null;
 
   socket.on('cursor:join', (payload: JoinPayload) => {
-    const { roomId } = payload;
+    const { roomId, nickname } = payload;
 
     if (currentRoom) {
       socket.leave(currentRoom);
@@ -82,7 +82,7 @@ export function setupCursorHandler(
     socket.join(roomId);
 
     const room = getOrCreateRoom(roomId);
-    const userInfo = generateUserInfo(socket.id);
+    const userInfo = generateUserInfo(socket.id, nickname);
     userData = {
       user: userInfo,
       position: { x: 0, y: 0 }

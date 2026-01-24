@@ -27,10 +27,10 @@ export function generateName(): string {
   return `${adjective} ${animal}`;
 }
 
-export function generateUserInfo(id: string) {
+export function generateUserInfo(id: string, nickname?: string) {
   return {
     id,
-    name: generateName(),
+    name: nickname || generateName(),
     color: generateColor()
   };
 }

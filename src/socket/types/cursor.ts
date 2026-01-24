@@ -20,6 +20,7 @@ export interface RoomState {
 
 export interface JoinPayload {
   roomId: string;
+  nickname?: string;
 }
 
 export interface MovePayload {
