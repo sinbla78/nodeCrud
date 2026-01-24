@@ -190,12 +190,19 @@
     "z-schema": "^5.0.5"
   },
   "devDependencies": {
+    "pm2": "^6.0.14",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   },
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop live-cursor",
+    "pm2:restart": "pm2 restart live-cursor",
+    "pm2:logs": "pm2 logs live-cursor",
+    "pm2:status": "pm2 status",
+    "pm2:delete": "pm2 delete live-cursor",
     "test": "echo \"Error: no test specified\" && exit 1",
     "commit:auto": "ts-node src/services/autoCommit/index.ts",
     "commit:help": "ts-node src/services/autoCommit/index.ts --help",
