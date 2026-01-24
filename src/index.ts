@@ -1,12 +1,20 @@
 import express, { Request, Response } from 'express';
+import { createServer } from 'http';
+import path from 'path';
+import { initializeSocket } from './config/socket';
 
 const app = express();
+const httpServer = createServer(app);
 const port = process.env.PORT || 3000;
 
-app.get('/', (req: Request, res: Response) => {
+initializeSocket(httpServer);
+
+app.use(express.static(path.join(__dirname, '../public')));
+
+app.get('/api', (req: Request, res: Response) => {
   res.send('Hello, World!');
 });
 
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

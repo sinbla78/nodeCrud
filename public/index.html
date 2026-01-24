@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Cursor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .cursor {
+      position: absolute;
+      pointer-events: none;
+      transition: transform 0.1s ease-out;
+      z-index: 1000;
+    }
+
+    .cursor-pointer {
+      width: 20px;
+      height: 20px;
+      transform: rotate(-45deg);
+    }
+
+    .cursor-label {
+      position: absolute;
+      left: 20px;
+      top: 15px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      color: white;
+      font-weight: 500;
+    }
+
+    .status-bar {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 12px 24px;
+      border-radius: 12px;
+      color: white;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .my-info {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 12px 24px;
+      border-radius: 12px;
+      color: white;
+      font-size: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .color-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .instructions {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 18px;
+      text-align: center;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <span>접속자: <strong id="userCount">1</strong>명</span>
+  </div>
+
+  <div class="instructions">
+    마우스를 움직여 보세요<br>
+    여러 브라우저 탭에서 접속하면 커서가 공유됩니다
+  </div>
+
+  <div class="my-info" id="myInfo">
+    연결 중...
+  </div>
+
+  <div id="cursors"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const cursorsContainer = document.getElementById('cursors');
+    const userCountEl = document.getElementById('userCount');
+    const myInfoEl = document.getElementById('myInfo');
+    const cursors = new Map();
+
+    const roomId = 'main';
+
+    socket.on('connect', () => {
+      socket.emit('cursor:join', { roomId });
+    });
+
+    socket.on('cursor:users', (users) => {
+      users.forEach(user => {
+        createCursor(user);
+      });
+    });
+
+    socket.on('cursor:joined', (data) => {
+      createCursor(data);
+      if (data.user.id === socket.id) {
+        myInfoEl.innerHTML = `
+          <span class="color-indicator" style="background: ${data.user.color}"></span>
+          ${data.user.name}
+        `;
+      }
+    });
+
+    socket.on('cursor:moved', (data) => {
+      updateCursor(data);
+    });
+
+    socket.on('cursor:left', (userId) => {
+      removeCursor(userId);
+    });
+
+    socket.on('room:count', (count) => {
+      userCountEl.textContent = count;
+    });
+
+    function createCursor(data) {
+      if (data.user.id === socket.id) {
+        myInfoEl.innerHTML = `
+          <span class="color-indicator" style="background: ${data.user.color}"></span>
+          ${data.user.name}
+        `;
+        return;
+      }
+
+      if (cursors.has(data.user.id)) return;
+
+      const cursor = document.createElement('div');
+      cursor.className = 'cursor';
+      cursor.id = `cursor-${data.user.id}`;
+      cursor.innerHTML = `
+        <svg class="cursor-pointer" viewBox="0 0 24 24" fill="${data.user.color}">
+          <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.48 0 .72-.58.38-.92L5.94 2.86a.5.5 0 0 0-.44.35z"/>
+        </svg>
+        <div class="cursor-label" style="background: ${data.user.color}">${data.user.name}</div>
+      `;
+      cursor.style.transform = `translate(${data.position.x}px, ${data.position.y}px)`;
+      cursorsContainer.appendChild(cursor);
+      cursors.set(data.user.id, cursor);
+    }
+
+    function updateCursor(data) {
+      let cursor = cursors.get(data.user.id);
+      if (!cursor) {
+        createCursor(data);
+        cursor = cursors.get(data.user.id);
+      }
+      if (cursor) {
+        cursor.style.transform = `translate(${data.position.x}px, ${data.position.y}px)`;
+      }
+    }
+
+    function removeCursor(userId) {
+      const cursor = cursors.get(userId);
+      if (cursor) {
+        cursor.remove();
+        cursors.delete(userId);
+      }
+    }
+
+    let lastEmit = 0;
+    const THROTTLE_MS = 16;
+
+    document.addEventListener('mousemove', (e) => {
+      const now = Date.now();
+      if (now - lastEmit >= THROTTLE_MS) {
+        socket.emit('cursor:move', {
+          position: { x: e.clientX, y: e.clientY }
+        });
+        lastEmit = now;
+      }
+    });
+  </script>
+</body>
+</html>
