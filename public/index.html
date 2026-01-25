@@ -514,6 +514,61 @@
       display: none;
     }
 
+    /* Cursor Effects */
+    .cursor-particle {
+      position: absolute;
+      pointer-events: none;
+      border-radius: 50%;
+      z-index: 997;
+    }
+
+    .cursor-particle.sparkle {
+      animation: sparkle 0.8s ease-out forwards;
+    }
+
+    .cursor-particle.trail {
+      animation: particleTrail 0.6s ease-out forwards;
+    }
+
+    @keyframes sparkle {
+      0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(0) rotate(180deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes particleTrail {
+      0% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(0);
+        opacity: 0;
+      }
+    }
+
+    .cursor-effect-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      font-size: 12px;
+    }
+
+    .cursor-effect-toggle select {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -967,6 +1022,15 @@
     <button class="add-note-btn" onclick="addStickyNote()">📝 메모 추가</button>
     <button class="upload-btn" onclick="document.getElementById('imageInput').click()">🖼️ 이미지</button>
     <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+    <div class="cursor-effect-toggle">
+      <span>커서</span>
+      <select id="cursorEffect" onchange="setCursorEffect(this.value)">
+        <option value="none">기본</option>
+        <option value="sparkle">반짝임</option>
+        <option value="fire">불꽃</option>
+        <option value="rainbow">무지개</option>
+      </select>
+    </div>
   </div>
 
   <div class="instructions">
@@ -1069,6 +1133,8 @@
     let currentShape = 'free';
     let shapeStartPos = null;
     let soundEnabled = true;
+    let cursorEffect = 'none';
+    let particleCounter = 0;
 
     // Sound effects using Web Audio API
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1122,6 +1188,53 @@
       const btn = document.getElementById('soundToggle');
       btn.textContent = soundEnabled ? '🔊' : '🔇';
       btn.classList.toggle('muted', !soundEnabled);
+    }
+
+    function setCursorEffect(effect) {
+      cursorEffect = effect;
+    }
+
+    function createCursorParticle(x, y, color) {
+      if (cursorEffect === 'none') return;
+      particleCounter++;
+      if (particleCounter % 3 !== 0) return; // Throttle particles
+
+      const particle = document.createElement('div');
+      particle.className = 'cursor-particle';
+
+      if (cursorEffect === 'sparkle') {
+        particle.classList.add('sparkle');
+        const size = 4 + Math.random() * 6;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particle.style.background = color;
+        particle.style.left = (x + (Math.random() - 0.5) * 20) + 'px';
+        particle.style.top = (y + (Math.random() - 0.5) * 20) + 'px';
+        particle.style.boxShadow = `0 0 ${size}px ${color}`;
+      } else if (cursorEffect === 'fire') {
+        particle.classList.add('trail');
+        const size = 6 + Math.random() * 8;
+        const fireColors = ['#ff4500', '#ff6b00', '#ff8c00', '#ffa500', '#ffcc00'];
+        const fireColor = fireColors[Math.floor(Math.random() * fireColors.length)];
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particle.style.background = fireColor;
+        particle.style.left = (x + (Math.random() - 0.5) * 10) + 'px';
+        particle.style.top = (y + Math.random() * 10) + 'px';
+        particle.style.boxShadow = `0 0 ${size}px ${fireColor}`;
+      } else if (cursorEffect === 'rainbow') {
+        particle.classList.add('trail');
+        const size = 5 + Math.random() * 5;
+        const hue = (Date.now() / 10) % 360;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particle.style.background = `hsl(${hue}, 100%, 50%)`;
+        particle.style.left = (x + (Math.random() - 0.5) * 15) + 'px';
+        particle.style.top = (y + (Math.random() - 0.5) * 15) + 'px';
+      }
+
+      document.body.appendChild(particle);
+      setTimeout(() => particle.remove(), 800);
     }
 
     // Initialize canvas
@@ -1513,6 +1626,7 @@
         socket.emit('cursor:move', { position: { x: e.clientX, y: e.clientY } });
         lastEmit = now;
       }
+      createCursorParticle(e.clientX, e.clientY, myColor);
     });
 
     document.addEventListener('click', (e) => {
