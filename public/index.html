@@ -132,6 +132,25 @@
       background: rgba(255, 255, 255, 0.25);
     }
 
+    .copy-link-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+
+    .copy-link-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .copy-link-btn.copied {
+      background: #4ade80;
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -543,6 +562,7 @@
     <div class="status-dot"></div>
     <span>접속자: <strong id="userCount">1</strong>명</span>
     <div class="room-name" id="roomName" onclick="openRoomModal()">main</div>
+    <button class="copy-link-btn" id="copyLinkBtn" onclick="copyRoomLink()">링크 복사</button>
   </div>
 
   <div class="draw-tools">
@@ -1012,6 +1032,20 @@
     roomModalEl.addEventListener('click', (e) => {
       if (e.target === roomModalEl) closeRoomModal();
     });
+
+    // Copy room link
+    function copyRoomLink() {
+      const url = `${window.location.origin}?room=${encodeURIComponent(currentRoom)}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('copyLinkBtn');
+        btn.textContent = '복사됨!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '링크 복사';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
   </script>
 </body>
 </html>
