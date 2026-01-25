@@ -632,6 +632,78 @@
       cursor: not-allowed;
     }
 
+    /* Mini Game */
+    .game-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .game-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .game-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 4000;
+      flex-direction: column;
+    }
+
+    .game-modal.active {
+      display: flex;
+    }
+
+    .game-canvas {
+      border: 2px solid white;
+      border-radius: 8px;
+      background: #1a1a2e;
+    }
+
+    .game-header {
+      color: white;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .game-score {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .game-status {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .game-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .game-instructions {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 12px;
+      margin-top: 12px;
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -1098,6 +1170,7 @@
         <option value="rainbow">무지개</option>
       </select>
     </div>
+    <button class="game-btn" onclick="openGame()">🏓 게임</button>
   </div>
 
   <div class="instructions">
@@ -1154,6 +1227,16 @@
   <div id="canvasImages"></div>
   <div id="stickyNotes"></div>
   <div id="cursors"></div>
+
+  <div class="game-modal" id="gameModal">
+    <button class="game-close" onclick="closeGame()">&times;</button>
+    <div class="game-header">
+      <div class="game-score" id="gameScore">0 : 0</div>
+      <div class="game-status" id="gameStatus">Space를 눌러 시작</div>
+    </div>
+    <canvas id="gameCanvas" class="game-canvas" width="600" height="400"></canvas>
+    <div class="game-instructions">W/S 또는 ↑/↓로 패들 이동 | Space로 시작</div>
+  </div>
 
   <div class="nickname-modal" id="nicknameModal">
     <div class="modal">
@@ -2195,6 +2278,168 @@
         }, 2000);
       });
     }
+
+    // Mini Pong Game
+    const gameModal = document.getElementById('gameModal');
+    const gameCanvas = document.getElementById('gameCanvas');
+    const gameCtx = gameCanvas.getContext('2d');
+    const gameScoreEl = document.getElementById('gameScore');
+    const gameStatusEl = document.getElementById('gameStatus');
+
+    let gameRunning = false;
+    let gameAnimationId = null;
+
+    const game = {
+      ball: { x: 300, y: 200, vx: 5, vy: 3, radius: 8 },
+      leftPaddle: { x: 10, y: 175, width: 10, height: 50, vy: 0 },
+      rightPaddle: { x: 580, y: 175, width: 10, height: 50, vy: 0 },
+      score: { left: 0, right: 0 },
+      keys: {}
+    };
+
+    function openGame() {
+      gameModal.classList.add('active');
+      resetGame();
+    }
+
+    function closeGame() {
+      gameModal.classList.remove('active');
+      gameRunning = false;
+      if (gameAnimationId) cancelAnimationFrame(gameAnimationId);
+    }
+
+    function resetGame() {
+      game.ball.x = 300;
+      game.ball.y = 200;
+      game.ball.vx = (Math.random() > 0.5 ? 1 : -1) * 5;
+      game.ball.vy = (Math.random() - 0.5) * 6;
+      game.leftPaddle.y = 175;
+      game.rightPaddle.y = 175;
+      gameStatusEl.textContent = 'Space를 눌러 시작';
+    }
+
+    function startGame() {
+      if (gameRunning) return;
+      gameRunning = true;
+      gameStatusEl.textContent = '게임 진행 중';
+      gameLoop();
+    }
+
+    function gameLoop() {
+      if (!gameRunning) return;
+
+      // Move paddles
+      if (game.keys['w'] || game.keys['W'] || game.keys['ArrowUp']) {
+        game.leftPaddle.y = Math.max(0, game.leftPaddle.y - 8);
+      }
+      if (game.keys['s'] || game.keys['S'] || game.keys['ArrowDown']) {
+        game.leftPaddle.y = Math.min(350, game.leftPaddle.y + 8);
+      }
+
+      // Simple AI for right paddle
+      const paddleCenter = game.rightPaddle.y + 25;
+      if (game.ball.y < paddleCenter - 10) {
+        game.rightPaddle.y = Math.max(0, game.rightPaddle.y - 4);
+      } else if (game.ball.y > paddleCenter + 10) {
+        game.rightPaddle.y = Math.min(350, game.rightPaddle.y + 4);
+      }
+
+      // Move ball
+      game.ball.x += game.ball.vx;
+      game.ball.y += game.ball.vy;
+
+      // Ball collision with top/bottom
+      if (game.ball.y <= 8 || game.ball.y >= 392) {
+        game.ball.vy *= -1;
+      }
+
+      // Ball collision with paddles
+      if (game.ball.x <= 28 &&
+          game.ball.y >= game.leftPaddle.y &&
+          game.ball.y <= game.leftPaddle.y + 50) {
+        game.ball.vx = Math.abs(game.ball.vx) * 1.05;
+        game.ball.vy += (game.ball.y - (game.leftPaddle.y + 25)) * 0.1;
+      }
+
+      if (game.ball.x >= 572 &&
+          game.ball.y >= game.rightPaddle.y &&
+          game.ball.y <= game.rightPaddle.y + 50) {
+        game.ball.vx = -Math.abs(game.ball.vx) * 1.05;
+        game.ball.vy += (game.ball.y - (game.rightPaddle.y + 25)) * 0.1;
+      }
+
+      // Scoring
+      if (game.ball.x < 0) {
+        game.score.right++;
+        updateScore();
+        resetGame();
+        gameRunning = false;
+        return;
+      }
+      if (game.ball.x > 600) {
+        game.score.left++;
+        updateScore();
+        resetGame();
+        gameRunning = false;
+        return;
+      }
+
+      // Draw
+      drawGame();
+
+      gameAnimationId = requestAnimationFrame(gameLoop);
+    }
+
+    function drawGame() {
+      gameCtx.fillStyle = '#1a1a2e';
+      gameCtx.fillRect(0, 0, 600, 400);
+
+      // Center line
+      gameCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      gameCtx.setLineDash([10, 10]);
+      gameCtx.beginPath();
+      gameCtx.moveTo(300, 0);
+      gameCtx.lineTo(300, 400);
+      gameCtx.stroke();
+      gameCtx.setLineDash([]);
+
+      // Ball
+      gameCtx.fillStyle = '#fff';
+      gameCtx.beginPath();
+      gameCtx.arc(game.ball.x, game.ball.y, game.ball.radius, 0, Math.PI * 2);
+      gameCtx.fill();
+
+      // Paddles
+      gameCtx.fillStyle = myColor || '#4ecdc4';
+      gameCtx.fillRect(game.leftPaddle.x, game.leftPaddle.y, game.leftPaddle.width, game.leftPaddle.height);
+      gameCtx.fillStyle = '#ff6b6b';
+      gameCtx.fillRect(game.rightPaddle.x, game.rightPaddle.y, game.rightPaddle.width, game.rightPaddle.height);
+    }
+
+    function updateScore() {
+      gameScoreEl.textContent = `${game.score.left} : ${game.score.right}`;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (!gameModal.classList.contains('active')) return;
+
+      game.keys[e.key] = true;
+
+      if (e.key === ' ') {
+        e.preventDefault();
+        startGame();
+      }
+      if (e.key === 'Escape') {
+        closeGame();
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      game.keys[e.key] = false;
+    });
+
+    // Initial game draw
+    drawGame();
   </script>
 </body>
 </html>
