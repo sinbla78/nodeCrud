@@ -367,6 +367,33 @@
       border-color: white;
     }
 
+    /* Sound Toggle */
+    .sound-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      font-size: 12px;
+    }
+
+    .sound-toggle button {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .sound-toggle button:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .sound-toggle button.muted {
+      opacity: 0.5;
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -813,6 +840,10 @@
       <span>배경</span>
       <div id="bgColorPicker"></div>
     </div>
+    <div class="sound-toggle">
+      <span>효과음</span>
+      <button id="soundToggle" onclick="toggleSound()">🔊</button>
+    </div>
   </div>
 
   <div class="instructions">
@@ -912,6 +943,61 @@
     let pointerMode = false;
     let currentShape = 'free';
     let shapeStartPos = null;
+    let soundEnabled = true;
+
+    // Sound effects using Web Audio API
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      if (type === 'join') {
+        oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialDecayTo(0.01, audioContext.currentTime + 0.2);
+      } else if (type === 'leave') {
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+        oscillator.frequency.setValueAtTime(349, audioContext.currentTime + 0.1); // F4
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialDecayTo(0.01, audioContext.currentTime + 0.2);
+      } else if (type === 'click') {
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+        gainNode.gain.exponentialDecayTo(0.01, audioContext.currentTime + 0.05);
+      } else if (type === 'ping') {
+        oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(1200, audioContext.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialDecayTo(0.01, audioContext.currentTime + 0.2);
+      } else if (type === 'chat') {
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+        gainNode.gain.exponentialDecayTo(0.01, audioContext.currentTime + 0.1);
+      }
+
+      oscillator.type = 'sine';
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    }
+
+    // Polyfill for exponentialDecayTo
+    GainNode.prototype.exponentialDecayTo = function(value, endTime) {
+      this.gain.exponentialRampToValueAtTime(Math.max(value, 0.0001), endTime);
+    };
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('soundToggle');
+      btn.textContent = soundEnabled ? '🔊' : '🔇';
+      btn.classList.toggle('muted', !soundEnabled);
+    }
 
     // Initialize canvas
     function resizeCanvas() {
@@ -1036,6 +1122,7 @@
         `;
       } else {
         createCursor(data);
+        playSound('join');
       }
       renderUserList();
     });
@@ -1045,14 +1132,21 @@
       removeCursor(userId);
       users.delete(userId);
       renderUserList();
+      playSound('leave');
     });
     socket.on('room:count', (count) => userCountEl.textContent = count);
 
     socket.on('cursor:clicked', (data) => {
       createClickEffect(data.position.x, data.position.y, data.color);
+      playSound('click');
     });
 
-    socket.on('chat:message', addChatMessage);
+    socket.on('chat:message', (data) => {
+      addChatMessage(data);
+      if (data.user.id !== socket.id) {
+        playSound('chat');
+      }
+    });
     socket.on('chat:history', (messages) => {
       chatMessagesEl.innerHTML = '';
       messages.forEach(addChatMessage);
@@ -1411,6 +1505,7 @@
 
     socket.on('ping:received', (data) => {
       showPingEffect(data.position.x, data.position.y, data.color, data.name);
+      playSound('ping');
     });
 
     // Emoji reactions
