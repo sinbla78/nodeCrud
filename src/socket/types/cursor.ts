@@ -126,6 +126,30 @@ export interface NoteDeletePayload {
   id: string;
 }
 
+export interface ImageData {
+  id: string;
+  x: number;
+  y: number;
+  dataUrl: string;
+}
+
+export interface ImageAddPayload {
+  id: string;
+  x: number;
+  y: number;
+  dataUrl: string;
+}
+
+export interface ImageMovePayload {
+  id: string;
+  x: number;
+  y: number;
+}
+
+export interface ImageDeletePayload {
+  id: string;
+}
+
 export interface ServerToClientEvents {
   'cursor:joined': (data: CursorData) => void;
   'cursor:moved': (data: CursorData) => void;
@@ -148,6 +172,10 @@ export interface ServerToClientEvents {
   'note:updated': (data: { id: string; content: string }) => void;
   'note:deleted': (data: { id: string }) => void;
   'note:list': (notes: NoteData[]) => void;
+  'image:added': (data: ImageData) => void;
+  'image:moved': (data: { id: string; x: number; y: number }) => void;
+  'image:deleted': (data: { id: string }) => void;
+  'image:list': (images: ImageData[]) => void;
 }
 
 export interface ClientToServerEvents {
@@ -165,4 +193,7 @@ export interface ClientToServerEvents {
   'note:move': (payload: NoteMovePayload) => void;
   'note:update': (payload: NoteUpdatePayload) => void;
   'note:delete': (payload: NoteDeletePayload) => void;
+  'image:add': (payload: ImageAddPayload) => void;
+  'image:move': (payload: ImageMovePayload) => void;
+  'image:delete': (payload: ImageDeletePayload) => void;
 }

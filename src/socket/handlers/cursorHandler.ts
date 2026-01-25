@@ -19,7 +19,11 @@ import {
   NoteAddPayload,
   NoteMovePayload,
   NoteUpdatePayload,
-  NoteDeletePayload
+  NoteDeletePayload,
+  ImageData,
+  ImageAddPayload,
+  ImageMovePayload,
+  ImageDeletePayload
 } from '../types/cursor';
 import { generateUserInfo } from '../../utils/colorGenerator';
 
@@ -28,6 +32,7 @@ interface RoomData {
   chatHistory: ChatMessage[];
   drawHistory: DrawData[];
   notes: Map<string, NoteData>;
+  images: Map<string, ImageData>;
 }
 
 const rooms = new Map<string, RoomData>();
@@ -41,7 +46,8 @@ function getOrCreateRoom(roomId: string): RoomData {
       users: new Map(),
       chatHistory: [],
       drawHistory: [],
-      notes: new Map()
+      notes: new Map(),
+      images: new Map()
     });
   }
   return rooms.get(roomId)!;
@@ -106,6 +112,7 @@ export function setupCursorHandler(
     socket.emit('chat:history', room.chatHistory);
     socket.emit('draw:history', room.drawHistory);
     socket.emit('note:list', Array.from(room.notes.values()));
+    socket.emit('image:list', Array.from(room.images.values()));
     socket.emit('room:info', { roomId, userCount: room.users.size });
 
     socket.to(roomId).emit('cursor:joined', userData);
@@ -293,6 +300,47 @@ export function setupCursorHandler(
 
     room.notes.delete(payload.id);
     io.to(currentRoom).emit('note:deleted', { id: payload.id });
+  });
+
+  socket.on('image:add', (payload: ImageAddPayload) => {
+    if (!currentRoom) return;
+
+    const room = rooms.get(currentRoom);
+    if (!room) return;
+
+    const imageData: ImageData = {
+      id: payload.id,
+      x: payload.x,
+      y: payload.y,
+      dataUrl: payload.dataUrl
+    };
+
+    room.images.set(payload.id, imageData);
+    io.to(currentRoom).emit('image:added', imageData);
+  });
+
+  socket.on('image:move', (payload: ImageMovePayload) => {
+    if (!currentRoom) return;
+
+    const room = rooms.get(currentRoom);
+    if (!room) return;
+
+    const image = room.images.get(payload.id);
+    if (image) {
+      image.x = payload.x;
+      image.y = payload.y;
+      socket.to(currentRoom).emit('image:moved', { id: payload.id, x: payload.x, y: payload.y });
+    }
+  });
+
+  socket.on('image:delete', (payload: ImageDeletePayload) => {
+    if (!currentRoom) return;
+
+    const room = rooms.get(currentRoom);
+    if (!room) return;
+
+    room.images.delete(payload.id);
+    io.to(currentRoom).emit('image:deleted', { id: payload.id });
   });
 
   socket.on('disconnect', () => {

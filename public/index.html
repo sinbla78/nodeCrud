@@ -456,6 +456,64 @@
       background: rgba(255, 255, 255, 0.25);
     }
 
+    /* Image Upload */
+    .canvas-image {
+      position: absolute;
+      max-width: 300px;
+      max-height: 300px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      cursor: move;
+      z-index: 400;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .canvas-image:hover {
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .image-delete-btn {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 24px;
+      height: 24px;
+      background: #ef4444;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      display: none;
+    }
+
+    .image-container:hover .image-delete-btn {
+      display: block;
+    }
+
+    .image-container {
+      position: absolute;
+      z-index: 400;
+    }
+
+    .upload-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .upload-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    #imageInput {
+      display: none;
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -907,6 +965,8 @@
       <button id="soundToggle" onclick="toggleSound()">🔊</button>
     </div>
     <button class="add-note-btn" onclick="addStickyNote()">📝 메모 추가</button>
+    <button class="upload-btn" onclick="document.getElementById('imageInput').click()">🖼️ 이미지</button>
+    <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
   </div>
 
   <div class="instructions">
@@ -955,6 +1015,7 @@
     </div>
   </div>
 
+  <div id="canvasImages"></div>
   <div id="stickyNotes"></div>
   <div id="cursors"></div>
 
@@ -1605,6 +1666,105 @@
         userListEl.appendChild(item);
       });
     }
+
+    // Image upload
+    const canvasImagesContainer = document.getElementById('canvasImages');
+    const canvasImages = new Map();
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        const id = `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const x = 200 + Math.random() * 300;
+        const y = 150 + Math.random() * 200;
+
+        socket.emit('image:add', { id, x, y, dataUrl });
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function createCanvasImage(data) {
+      if (canvasImages.has(data.id)) return;
+
+      const container = document.createElement('div');
+      container.className = 'image-container';
+      container.style.left = data.x + 'px';
+      container.style.top = data.y + 'px';
+
+      const img = document.createElement('img');
+      img.className = 'canvas-image';
+      img.src = data.dataUrl;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'image-delete-btn';
+      deleteBtn.innerHTML = '&times;';
+      deleteBtn.onclick = () => socket.emit('image:delete', { id: data.id });
+
+      container.appendChild(img);
+      container.appendChild(deleteBtn);
+
+      // Drag functionality
+      let isDragging = false;
+      let dragOffset = { x: 0, y: 0 };
+
+      img.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        dragOffset = {
+          x: e.clientX - container.offsetLeft,
+          y: e.clientY - container.offsetTop
+        };
+        container.style.zIndex = 401;
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        container.style.left = (e.clientX - dragOffset.x) + 'px';
+        container.style.top = (e.clientY - dragOffset.y) + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          container.style.zIndex = 400;
+          socket.emit('image:move', {
+            id: data.id,
+            x: parseInt(container.style.left),
+            y: parseInt(container.style.top)
+          });
+        }
+      });
+
+      canvasImagesContainer.appendChild(container);
+      canvasImages.set(data.id, container);
+    }
+
+    socket.on('image:added', createCanvasImage);
+
+    socket.on('image:moved', (data) => {
+      const container = canvasImages.get(data.id);
+      if (container) {
+        container.style.left = data.x + 'px';
+        container.style.top = data.y + 'px';
+      }
+    });
+
+    socket.on('image:deleted', (data) => {
+      const container = canvasImages.get(data.id);
+      if (container) {
+        container.remove();
+        canvasImages.delete(data.id);
+      }
+    });
+
+    socket.on('image:list', (images) => {
+      images.forEach(createCanvasImage);
+    });
 
     // Sticky notes
     const stickyNotesContainer = document.getElementById('stickyNotes');
