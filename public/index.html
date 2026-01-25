@@ -151,6 +151,56 @@
       background: #4ade80;
     }
 
+    /* User List Panel */
+    .user-list-panel {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      width: 200px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      z-index: 1001;
+      max-height: 300px;
+      overflow: hidden;
+    }
+
+    .user-list-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .user-list {
+      max-height: 250px;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+    }
+
+    .user-item.me {
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    .user-color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -596,6 +646,11 @@
 
   <div class="my-info" id="myInfo">연결 중...</div>
 
+  <div class="user-list-panel" id="userListPanel">
+    <div class="user-list-header">접속자 목록</div>
+    <div class="user-list" id="userList"></div>
+  </div>
+
   <div class="chat-panel" id="chatPanel">
     <div class="chat-header">
       <span>채팅</span>
@@ -650,12 +705,14 @@
     const ctx = canvas.getContext('2d');
 
     const cursors = new Map();
+    const users = new Map();
     let currentRoom = new URLSearchParams(window.location.search).get('room') || 'main';
     let myColor = '#ffffff';
     let myUserInfo = null;
     let myNickname = localStorage.getItem('nickname') || '';
     const nicknameModalEl = document.getElementById('nicknameModal');
     const nicknameInputEl = document.getElementById('nicknameInput');
+    const userListEl = document.getElementById('userList');
 
     // Drawing state
     const DRAW_COLORS = ['#ffffff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#ff69b4'];
@@ -742,11 +799,16 @@
       }
     });
 
-    socket.on('cursor:users', (users) => {
-      users.forEach(createCursor);
+    socket.on('cursor:users', (usersList) => {
+      usersList.forEach(data => {
+        createCursor(data);
+        users.set(data.user.id, data.user);
+      });
+      renderUserList();
     });
 
     socket.on('cursor:joined', (data) => {
+      users.set(data.user.id, data.user);
       if (data.user.id === socket.id) {
         myUserInfo = data.user;
         myColor = data.user.color;
@@ -760,10 +822,15 @@
       } else {
         createCursor(data);
       }
+      renderUserList();
     });
 
     socket.on('cursor:moved', updateCursor);
-    socket.on('cursor:left', removeCursor);
+    socket.on('cursor:left', (userId) => {
+      removeCursor(userId);
+      users.delete(userId);
+      renderUserList();
+    });
     socket.on('room:count', (count) => userCountEl.textContent = count);
 
     socket.on('cursor:clicked', (data) => {
@@ -1016,6 +1083,7 @@
         currentRoom = newRoom;
         cursors.forEach((data, id) => data.element.remove());
         cursors.clear();
+        users.clear();
         drawings.clear();
         chatMessagesEl.innerHTML = '';
         socket.emit('cursor:join', { roomId: currentRoom, nickname: myNickname || undefined });
@@ -1032,6 +1100,20 @@
     roomModalEl.addEventListener('click', (e) => {
       if (e.target === roomModalEl) closeRoomModal();
     });
+
+    // User list
+    function renderUserList() {
+      userListEl.innerHTML = '';
+      users.forEach((user, id) => {
+        const item = document.createElement('div');
+        item.className = 'user-item' + (id === socket.id ? ' me' : '');
+        item.innerHTML = `
+          <span class="user-color-dot" style="background: ${user.color}"></span>
+          <span>${user.name}${id === socket.id ? ' (나)' : ''}</span>
+        `;
+        userListEl.appendChild(item);
+      });
+    }
 
     // Copy room link
     function copyRoomLink() {
