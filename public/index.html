@@ -603,6 +603,35 @@
       margin-top: 4px;
     }
 
+    /* Undo/Redo Buttons */
+    .undo-redo-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .undo-btn, .redo-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .undo-btn:hover, .redo-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .undo-btn:disabled, .redo-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -1043,6 +1072,10 @@
         <option value="60000">1분</option>
       </select>
     </div>
+    <div class="undo-redo-btns">
+      <button class="undo-btn" id="undoBtn" onclick="undoDrawing()" title="실행 취소 (Ctrl+Z)">↶</button>
+      <button class="redo-btn" id="redoBtn" onclick="redoDrawing()" title="다시 실행 (Ctrl+Y)">↷</button>
+    </div>
     <button class="clear-btn" onclick="clearCanvas()">캔버스 지우기</button>
     <button class="pointer-btn" id="pointerBtn" onclick="togglePointerMode()">📍 여기 봐</button>
     <div class="bg-color-section">
@@ -1168,6 +1201,8 @@
     let isDrawing = false;
     let lastPos = null;
     const drawings = new Map();
+    const myDrawingIds = []; // Track my own drawings for undo
+    const redoStack = [];
     let pointerMode = false;
     let currentShape = 'free';
     let shapeStartPos = null;
@@ -1438,6 +1473,11 @@
         width: data.width,
         timestamp: data.timestamp
       });
+      if (data.user && data.user.id === socket.id) {
+        myDrawingIds.push(data.id);
+        redoStack.length = 0; // Clear redo stack on new drawing
+        updateUndoRedoButtons();
+      }
     });
 
     socket.on('draw:shape', (data) => {
@@ -1449,6 +1489,11 @@
         width: data.width,
         timestamp: data.timestamp
       });
+      if (data.user && data.user.id === socket.id) {
+        myDrawingIds.push(data.id);
+        redoStack.length = 0;
+        updateUndoRedoButtons();
+      }
     });
 
     socket.on('draw:history', (lines) => {
@@ -1466,6 +1511,17 @@
 
     socket.on('draw:cleared', () => {
       drawings.clear();
+      myDrawingIds.length = 0;
+      redoStack.length = 0;
+      updateUndoRedoButtons();
+    });
+
+    socket.on('draw:undone', (data) => {
+      drawings.delete(data.id);
+    });
+
+    socket.on('draw:redone', (data) => {
+      drawings.set(data.id, data.data);
     });
 
     socket.on('room:list', (rooms) => {
@@ -1659,8 +1715,54 @@
 
     function clearCanvas() {
       drawings.clear();
+      myDrawingIds.length = 0;
+      redoStack.length = 0;
+      updateUndoRedoButtons();
       socket.emit('draw:clear');
     }
+
+    function undoDrawing() {
+      if (myDrawingIds.length === 0) return;
+
+      const lastId = myDrawingIds.pop();
+      const drawing = drawings.get(lastId);
+      if (drawing) {
+        redoStack.push({ id: lastId, data: drawing });
+        drawings.delete(lastId);
+        socket.emit('draw:undo', { id: lastId });
+      }
+      updateUndoRedoButtons();
+    }
+
+    function redoDrawing() {
+      if (redoStack.length === 0) return;
+
+      const { id, data } = redoStack.pop();
+      drawings.set(id, data);
+      myDrawingIds.push(id);
+      socket.emit('draw:redo', { id, data });
+      updateUndoRedoButtons();
+    }
+
+    function updateUndoRedoButtons() {
+      document.getElementById('undoBtn').disabled = myDrawingIds.length === 0;
+      document.getElementById('redoBtn').disabled = redoStack.length === 0;
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z') {
+          e.preventDefault();
+          undoDrawing();
+        } else if (e.key === 'y') {
+          e.preventDefault();
+          redoDrawing();
+        }
+      }
+    });
 
     // Mouse tracking
     let lastEmit = 0;

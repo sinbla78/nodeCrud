@@ -168,6 +168,8 @@ export interface ServerToClientEvents {
   'draw:line': (data: DrawData) => void;
   'draw:history': (lines: DrawData[]) => void;
   'draw:cleared': () => void;
+  'draw:undone': (data: { id: string }) => void;
+  'draw:redone': (data: { id: string; data: any }) => void;
   'emoji:received': (data: { emoji: string; position: CursorPosition }) => void;
   'ping:received': (data: { position: CursorPosition; color: string; name: string }) => void;
   'draw:shape': (data: ShapeData) => void;
@@ -189,6 +191,8 @@ export interface ClientToServerEvents {
   'chat:send': (payload: ChatPayload) => void;
   'draw:line': (payload: DrawPayload) => void;
   'draw:clear': () => void;
+  'draw:undo': (payload: { id: string }) => void;
+  'draw:redo': (payload: { id: string; data: any }) => void;
   'room:list': () => void;
   'emoji:send': (payload: EmojiPayload) => void;
   'ping:send': (payload: PingPayload) => void;

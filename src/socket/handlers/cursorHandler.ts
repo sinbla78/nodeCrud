@@ -216,6 +216,23 @@ export function setupCursorHandler(
     io.to(currentRoom).emit('draw:cleared');
   });
 
+  socket.on('draw:undo', (payload: { id: string }) => {
+    if (!currentRoom) return;
+
+    const room = rooms.get(currentRoom);
+    if (room) {
+      room.drawHistory = room.drawHistory.filter(d => d.id !== payload.id);
+    }
+
+    socket.to(currentRoom).emit('draw:undone', { id: payload.id });
+  });
+
+  socket.on('draw:redo', (payload: { id: string; data: any }) => {
+    if (!currentRoom) return;
+
+    socket.to(currentRoom).emit('draw:redone', payload);
+  });
+
   socket.on('room:list', () => {
     socket.emit('room:list', getRoomList());
   });
