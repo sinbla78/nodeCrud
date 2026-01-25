@@ -33,6 +33,7 @@ interface RoomData {
   drawHistory: DrawData[];
   notes: Map<string, NoteData>;
   images: Map<string, ImageData>;
+  password?: string;
 }
 
 const rooms = new Map<string, RoomData>();
@@ -69,7 +70,7 @@ function getRoomList(): RoomInfo[] {
   const list: RoomInfo[] = [];
   rooms.forEach((data, id) => {
     if (data.users.size > 0) {
-      list.push({ id, userCount: data.users.size });
+      list.push({ id, userCount: data.users.size, hasPassword: !!data.password });
     }
   });
   return list;
@@ -83,7 +84,16 @@ export function setupCursorHandler(
   let userData: CursorData | null = null;
 
   socket.on('cursor:join', (payload: JoinPayload) => {
-    const { roomId, nickname } = payload;
+    const { roomId, nickname, password } = payload;
+
+    // Check if room exists and has password
+    const existingRoom = rooms.get(roomId);
+    if (existingRoom && existingRoom.password) {
+      if (existingRoom.password !== password) {
+        socket.emit('room:join:error', { message: '비밀번호가 올바르지 않습니다.' });
+        return;
+      }
+    }
 
     if (currentRoom) {
       socket.leave(currentRoom);
@@ -99,6 +109,12 @@ export function setupCursorHandler(
     socket.join(roomId);
 
     const room = getOrCreateRoom(roomId);
+
+    // Set password for new room if provided
+    if (!existingRoom && password) {
+      room.password = password;
+    }
+
     const userInfo = generateUserInfo(socket.id, nickname);
     userData = {
       user: userInfo,
@@ -114,6 +130,7 @@ export function setupCursorHandler(
     socket.emit('note:list', Array.from(room.notes.values()));
     socket.emit('image:list', Array.from(room.images.values()));
     socket.emit('room:info', { roomId, userCount: room.users.size });
+    socket.emit('room:join:success');
 
     socket.to(roomId).emit('cursor:joined', userData);
     broadcastRoomCount(io, roomId);

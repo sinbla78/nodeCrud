@@ -569,6 +569,40 @@
       font-size: 12px;
     }
 
+    /* Password Room */
+    .password-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .password-field input {
+      flex: 1;
+    }
+
+    .password-field label {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .lock-icon {
+      color: #fbbf24;
+    }
+
+    .room-item .lock-icon {
+      font-size: 12px;
+    }
+
+    .password-error {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -1072,6 +1106,11 @@
       <h2>룸 선택</h2>
       <div class="room-list" id="roomList"></div>
       <input type="text" id="roomInput" placeholder="새 룸 이름 입력...">
+      <div class="password-field">
+        <label><input type="checkbox" id="usePassword"> 비밀번호 설정</label>
+      </div>
+      <input type="password" id="roomPassword" placeholder="비밀번호 입력..." style="display: none;">
+      <div class="password-error" id="passwordError" style="display: none;"></div>
       <div class="modal-buttons">
         <button class="modal-btn secondary" onclick="closeRoomModal()">취소</button>
         <button class="modal-btn primary" onclick="joinRoom()">입장</button>
@@ -1434,9 +1473,16 @@
       rooms.forEach(room => {
         const item = document.createElement('div');
         item.className = 'room-item';
-        item.innerHTML = `<span>${room.id}</span><span class="count">${room.userCount}명</span>`;
+        item.innerHTML = `
+          <span>${room.hasPassword ? '<span class="lock-icon">🔒</span> ' : ''}${room.id}</span>
+          <span class="count">${room.userCount}명</span>
+        `;
         item.onclick = () => {
           roomInputEl.value = room.id;
+          if (room.hasPassword) {
+            roomPasswordEl.style.display = 'block';
+            roomPasswordEl.placeholder = '비밀번호 입력 (필수)';
+          }
         };
         roomListEl.appendChild(item);
       });
@@ -1674,31 +1720,72 @@
     }
 
     // Room
+    const usePasswordEl = document.getElementById('usePassword');
+    const roomPasswordEl = document.getElementById('roomPassword');
+    const passwordErrorEl = document.getElementById('passwordError');
+    let pendingRoomJoin = null;
+
+    usePasswordEl.addEventListener('change', (e) => {
+      roomPasswordEl.style.display = e.target.checked ? 'block' : 'none';
+    });
+
     function openRoomModal() {
       socket.emit('room:list');
       roomModalEl.classList.add('active');
       roomInputEl.value = '';
+      roomPasswordEl.value = '';
+      usePasswordEl.checked = false;
+      roomPasswordEl.style.display = 'none';
+      passwordErrorEl.style.display = 'none';
     }
 
     function closeRoomModal() {
       roomModalEl.classList.remove('active');
+      pendingRoomJoin = null;
     }
 
     function joinRoom() {
       const newRoom = roomInputEl.value.trim() || 'main';
-      if (newRoom !== currentRoom) {
-        currentRoom = newRoom;
+      const password = usePasswordEl.checked ? roomPasswordEl.value : (roomPasswordEl.value || undefined);
+
+      passwordErrorEl.style.display = 'none';
+
+      if (newRoom !== currentRoom || pendingRoomJoin) {
+        pendingRoomJoin = newRoom;
+        socket.emit('cursor:join', {
+          roomId: newRoom,
+          nickname: myNickname || undefined,
+          password: password
+        });
+      } else {
+        closeRoomModal();
+      }
+    }
+
+    socket.on('room:join:error', (data) => {
+      passwordErrorEl.textContent = data.message;
+      passwordErrorEl.style.display = 'block';
+      pendingRoomJoin = null;
+    });
+
+    socket.on('room:join:success', () => {
+      if (pendingRoomJoin) {
+        currentRoom = pendingRoomJoin;
         cursors.forEach((data, id) => data.element.remove());
         cursors.clear();
         users.clear();
         drawings.clear();
+        stickyNotes.forEach(note => note.remove());
+        stickyNotes.clear();
+        canvasImages.forEach(img => img.remove());
+        canvasImages.clear();
         chatMessagesEl.innerHTML = '';
-        socket.emit('cursor:join', { roomId: currentRoom, nickname: myNickname || undefined });
         roomNameEl.textContent = currentRoom;
         window.history.pushState({}, '', `?room=${encodeURIComponent(currentRoom)}`);
+        pendingRoomJoin = null;
+        closeRoomModal();
       }
-      closeRoomModal();
-    }
+    });
 
     roomInputEl.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') joinRoom();

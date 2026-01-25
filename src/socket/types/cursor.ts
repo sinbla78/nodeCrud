@@ -21,6 +21,7 @@ export interface RoomState {
 export interface JoinPayload {
   roomId: string;
   nickname?: string;
+  password?: string;
 }
 
 export interface MovePayload {
@@ -65,6 +66,7 @@ export interface ClearCanvasPayload {
 export interface RoomInfo {
   id: string;
   userCount: number;
+  hasPassword?: boolean;
 }
 
 export interface EmojiPayload {
@@ -159,6 +161,8 @@ export interface ServerToClientEvents {
   'room:count': (count: number) => void;
   'room:info': (info: { roomId: string; userCount: number }) => void;
   'room:list': (rooms: RoomInfo[]) => void;
+  'room:join:error': (data: { message: string }) => void;
+  'room:join:success': () => void;
   'chat:message': (data: ChatMessage) => void;
   'chat:history': (messages: ChatMessage[]) => void;
   'draw:line': (data: DrawData) => void;
