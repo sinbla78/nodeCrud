@@ -201,6 +201,56 @@
       flex-shrink: 0;
     }
 
+    /* Emoji Reactions */
+    .emoji-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      gap: 8px;
+      z-index: 1001;
+    }
+
+    .emoji-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .emoji-btn:hover {
+      transform: scale(1.3);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .floating-emoji {
+      position: absolute;
+      font-size: 32px;
+      pointer-events: none;
+      animation: floatUp 2s ease-out forwards;
+      z-index: 2000;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100px) scale(1.5);
+        opacity: 0;
+      }
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -645,6 +695,15 @@
   </div>
 
   <div class="my-info" id="myInfo">연결 중...</div>
+
+  <div class="emoji-bar">
+    <button class="emoji-btn" onclick="sendEmoji('👍')">👍</button>
+    <button class="emoji-btn" onclick="sendEmoji('❤️')">❤️</button>
+    <button class="emoji-btn" onclick="sendEmoji('😂')">😂</button>
+    <button class="emoji-btn" onclick="sendEmoji('🎉')">🎉</button>
+    <button class="emoji-btn" onclick="sendEmoji('👏')">👏</button>
+    <button class="emoji-btn" onclick="sendEmoji('🔥')">🔥</button>
+  </div>
 
   <div class="user-list-panel" id="userListPanel">
     <div class="user-list-header">접속자 목록</div>
@@ -1099,6 +1158,26 @@
 
     roomModalEl.addEventListener('click', (e) => {
       if (e.target === roomModalEl) closeRoomModal();
+    });
+
+    // Emoji reactions
+    function sendEmoji(emoji) {
+      socket.emit('emoji:send', { emoji });
+      showFloatingEmoji(emoji, window.innerWidth / 2, window.innerHeight - 100);
+    }
+
+    function showFloatingEmoji(emoji, x, y) {
+      const el = document.createElement('div');
+      el.className = 'floating-emoji';
+      el.textContent = emoji;
+      el.style.left = (x - 16) + 'px';
+      el.style.top = y + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2000);
+    }
+
+    socket.on('emoji:received', (data) => {
+      showFloatingEmoji(data.emoji, data.position.x, data.position.y);
     });
 
     // User list

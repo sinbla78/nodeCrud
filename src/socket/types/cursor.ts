@@ -67,6 +67,10 @@ export interface RoomInfo {
   userCount: number;
 }
 
+export interface EmojiPayload {
+  emoji: string;
+}
+
 export interface ServerToClientEvents {
   'cursor:joined': (data: CursorData) => void;
   'cursor:moved': (data: CursorData) => void;
@@ -81,6 +85,7 @@ export interface ServerToClientEvents {
   'draw:line': (data: DrawData) => void;
   'draw:history': (lines: DrawData[]) => void;
   'draw:cleared': () => void;
+  'emoji:received': (data: { emoji: string; position: CursorPosition }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -91,4 +96,5 @@ export interface ClientToServerEvents {
   'draw:line': (payload: DrawPayload) => void;
   'draw:clear': () => void;
   'room:list': () => void;
+  'emoji:send': (payload: EmojiPayload) => void;
 }

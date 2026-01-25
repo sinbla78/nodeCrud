@@ -10,7 +10,8 @@ import {
   ChatMessage,
   DrawPayload,
   DrawData,
-  RoomInfo
+  RoomInfo,
+  EmojiPayload
 } from '../types/cursor';
 import { generateUserInfo } from '../../utils/colorGenerator';
 
@@ -182,6 +183,21 @@ export function setupCursorHandler(
 
   socket.on('room:list', () => {
     socket.emit('room:list', getRoomList());
+  });
+
+  socket.on('emoji:send', (payload: EmojiPayload) => {
+    if (!currentRoom || !userData) return;
+
+    // 랜덤 위치에 이모지 표시
+    const position = {
+      x: Math.random() * 800 + 200,
+      y: Math.random() * 400 + 200
+    };
+
+    socket.to(currentRoom).emit('emoji:received', {
+      emoji: payload.emoji,
+      position
+    });
   });
 
   socket.on('disconnect', () => {
