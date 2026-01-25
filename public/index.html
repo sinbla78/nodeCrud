@@ -394,6 +394,68 @@
       opacity: 0.5;
     }
 
+    /* Sticky Notes */
+    .sticky-note {
+      position: absolute;
+      width: 150px;
+      min-height: 100px;
+      background: #fef3c7;
+      border-radius: 4px;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+      z-index: 500;
+      cursor: move;
+    }
+
+    .sticky-note-header {
+      background: rgba(0,0,0,0.1);
+      padding: 4px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #666;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .sticky-note-delete {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .sticky-note-delete:hover {
+      color: #ef4444;
+    }
+
+    .sticky-note-content {
+      padding: 8px;
+      font-size: 12px;
+      color: #333;
+      outline: none;
+      min-height: 60px;
+    }
+
+    .sticky-note.yellow { background: #fef3c7; }
+    .sticky-note.pink { background: #fce7f3; }
+    .sticky-note.green { background: #d1fae5; }
+    .sticky-note.blue { background: #dbeafe; }
+
+    .add-note-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .add-note-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -844,6 +906,7 @@
       <span>효과음</span>
       <button id="soundToggle" onclick="toggleSound()">🔊</button>
     </div>
+    <button class="add-note-btn" onclick="addStickyNote()">📝 메모 추가</button>
   </div>
 
   <div class="instructions">
@@ -892,6 +955,7 @@
     </div>
   </div>
 
+  <div id="stickyNotes"></div>
   <div id="cursors"></div>
 
   <div class="nickname-modal" id="nicknameModal">
@@ -1541,6 +1605,119 @@
         userListEl.appendChild(item);
       });
     }
+
+    // Sticky notes
+    const stickyNotesContainer = document.getElementById('stickyNotes');
+    const stickyNotes = new Map();
+    const NOTE_COLORS = ['yellow', 'pink', 'green', 'blue'];
+
+    function addStickyNote() {
+      const id = `note-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const color = NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)];
+      const x = 200 + Math.random() * 400;
+      const y = 150 + Math.random() * 300;
+
+      socket.emit('note:add', { id, x, y, color, content: '' });
+    }
+
+    function createStickyNote(data) {
+      if (stickyNotes.has(data.id)) return;
+
+      const note = document.createElement('div');
+      note.className = `sticky-note ${data.color}`;
+      note.style.left = data.x + 'px';
+      note.style.top = data.y + 'px';
+      note.innerHTML = `
+        <div class="sticky-note-header">
+          <span>${data.author || '익명'}</span>
+          <button class="sticky-note-delete" onclick="deleteStickyNote('${data.id}')">&times;</button>
+        </div>
+        <div class="sticky-note-content" contenteditable="true" data-id="${data.id}">${data.content || ''}</div>
+      `;
+
+      // Drag functionality
+      let isDragging = false;
+      let dragOffset = { x: 0, y: 0 };
+
+      note.querySelector('.sticky-note-header').addEventListener('mousedown', (e) => {
+        isDragging = true;
+        dragOffset = {
+          x: e.clientX - note.offsetLeft,
+          y: e.clientY - note.offsetTop
+        };
+        note.style.zIndex = 501;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const newX = e.clientX - dragOffset.x;
+        const newY = e.clientY - dragOffset.y;
+        note.style.left = newX + 'px';
+        note.style.top = newY + 'px';
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          note.style.zIndex = 500;
+          socket.emit('note:move', {
+            id: data.id,
+            x: parseInt(note.style.left),
+            y: parseInt(note.style.top)
+          });
+        }
+      });
+
+      // Content editing
+      const contentEl = note.querySelector('.sticky-note-content');
+      contentEl.addEventListener('blur', () => {
+        socket.emit('note:update', {
+          id: data.id,
+          content: contentEl.textContent
+        });
+      });
+
+      stickyNotesContainer.appendChild(note);
+      stickyNotes.set(data.id, note);
+    }
+
+    function deleteStickyNote(id) {
+      socket.emit('note:delete', { id });
+    }
+
+    socket.on('note:added', (data) => {
+      createStickyNote(data);
+    });
+
+    socket.on('note:moved', (data) => {
+      const note = stickyNotes.get(data.id);
+      if (note) {
+        note.style.left = data.x + 'px';
+        note.style.top = data.y + 'px';
+      }
+    });
+
+    socket.on('note:updated', (data) => {
+      const note = stickyNotes.get(data.id);
+      if (note) {
+        const contentEl = note.querySelector('.sticky-note-content');
+        if (document.activeElement !== contentEl) {
+          contentEl.textContent = data.content;
+        }
+      }
+    });
+
+    socket.on('note:deleted', (data) => {
+      const note = stickyNotes.get(data.id);
+      if (note) {
+        note.remove();
+        stickyNotes.delete(data.id);
+      }
+    });
+
+    socket.on('note:list', (notes) => {
+      notes.forEach(createStickyNote);
+    });
 
     // Copy room link
     function copyRoomLink() {

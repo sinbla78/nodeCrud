@@ -14,7 +14,12 @@ import {
   EmojiPayload,
   PingPayload,
   ShapePayload,
-  ShapeData
+  ShapeData,
+  NoteData,
+  NoteAddPayload,
+  NoteMovePayload,
+  NoteUpdatePayload,
+  NoteDeletePayload
 } from '../types/cursor';
 import { generateUserInfo } from '../../utils/colorGenerator';
 
@@ -22,6 +27,7 @@ interface RoomData {
   users: Map<string, CursorData>;
   chatHistory: ChatMessage[];
   drawHistory: DrawData[];
+  notes: Map<string, NoteData>;
 }
 
 const rooms = new Map<string, RoomData>();
@@ -34,7 +40,8 @@ function getOrCreateRoom(roomId: string): RoomData {
     rooms.set(roomId, {
       users: new Map(),
       chatHistory: [],
-      drawHistory: []
+      drawHistory: [],
+      notes: new Map()
     });
   }
   return rooms.get(roomId)!;
@@ -98,6 +105,7 @@ export function setupCursorHandler(
     socket.emit('cursor:users', existingUsers);
     socket.emit('chat:history', room.chatHistory);
     socket.emit('draw:history', room.drawHistory);
+    socket.emit('note:list', Array.from(room.notes.values()));
     socket.emit('room:info', { roomId, userCount: room.users.size });
 
     socket.to(roomId).emit('cursor:joined', userData);
@@ -229,6 +237,62 @@ export function setupCursorHandler(
     };
 
     io.to(currentRoom).emit('draw:shape', shapeData);
+  });
+
+  socket.on('note:add', (payload: NoteAddPayload) => {
+    if (!currentRoom || !userData) return;
+
+    const room = rooms.get(currentRoom);
+    if (!room) return;
+
+    const noteData: NoteData = {
+      id: payload.id,
+      x: payload.x,
+      y: payload.y,
+      color: payload.color,
+      content: payload.content,
+      author: userData.user.name
+    };
+
+    room.notes.set(payload.id, noteData);
+    io.to(currentRoom).emit('note:added', noteData);
+  });
+
+  socket.on('note:move', (payload: NoteMovePayload) => {
+    if (!currentRoom) return;
+
+    const room = rooms.get(currentRoom);
+    if (!room) return;
+
+    const note = room.notes.get(payload.id);
+    if (note) {
+      note.x = payload.x;
+      note.y = payload.y;
+      socket.to(currentRoom).emit('note:moved', { id: payload.id, x: payload.x, y: payload.y });
+    }
+  });
+
+  socket.on('note:update', (payload: NoteUpdatePayload) => {
+    if (!currentRoom) return;
+
+    const room = rooms.get(currentRoom);
+    if (!room) return;
+
+    const note = room.notes.get(payload.id);
+    if (note) {
+      note.content = payload.content;
+      socket.to(currentRoom).emit('note:updated', { id: payload.id, content: payload.content });
+    }
+  });
+
+  socket.on('note:delete', (payload: NoteDeletePayload) => {
+    if (!currentRoom) return;
+
+    const room = rooms.get(currentRoom);
+    if (!room) return;
+
+    room.notes.delete(payload.id);
+    io.to(currentRoom).emit('note:deleted', { id: payload.id });
   });
 
   socket.on('disconnect', () => {

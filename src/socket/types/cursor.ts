@@ -94,6 +94,38 @@ export interface ShapeData {
   timestamp: number;
 }
 
+export interface NoteData {
+  id: string;
+  x: number;
+  y: number;
+  color: string;
+  content: string;
+  author: string;
+}
+
+export interface NoteAddPayload {
+  id: string;
+  x: number;
+  y: number;
+  color: string;
+  content: string;
+}
+
+export interface NoteMovePayload {
+  id: string;
+  x: number;
+  y: number;
+}
+
+export interface NoteUpdatePayload {
+  id: string;
+  content: string;
+}
+
+export interface NoteDeletePayload {
+  id: string;
+}
+
 export interface ServerToClientEvents {
   'cursor:joined': (data: CursorData) => void;
   'cursor:moved': (data: CursorData) => void;
@@ -111,6 +143,11 @@ export interface ServerToClientEvents {
   'emoji:received': (data: { emoji: string; position: CursorPosition }) => void;
   'ping:received': (data: { position: CursorPosition; color: string; name: string }) => void;
   'draw:shape': (data: ShapeData) => void;
+  'note:added': (data: NoteData) => void;
+  'note:moved': (data: { id: string; x: number; y: number }) => void;
+  'note:updated': (data: { id: string; content: string }) => void;
+  'note:deleted': (data: { id: string }) => void;
+  'note:list': (notes: NoteData[]) => void;
 }
 
 export interface ClientToServerEvents {
@@ -124,4 +161,8 @@ export interface ClientToServerEvents {
   'emoji:send': (payload: EmojiPayload) => void;
   'ping:send': (payload: PingPayload) => void;
   'draw:shape': (payload: ShapePayload) => void;
+  'note:add': (payload: NoteAddPayload) => void;
+  'note:move': (payload: NoteMovePayload) => void;
+  'note:update': (payload: NoteUpdatePayload) => void;
+  'note:delete': (payload: NoteDeletePayload) => void;
 }
