@@ -75,6 +75,25 @@ export interface PingPayload {
   position: CursorPosition;
 }
 
+export interface ShapePayload {
+  shape: string;
+  from: CursorPosition;
+  to: CursorPosition;
+  color: string;
+  width: number;
+}
+
+export interface ShapeData {
+  id: string;
+  user: UserInfo;
+  shape: string;
+  from: CursorPosition;
+  to: CursorPosition;
+  color: string;
+  width: number;
+  timestamp: number;
+}
+
 export interface ServerToClientEvents {
   'cursor:joined': (data: CursorData) => void;
   'cursor:moved': (data: CursorData) => void;
@@ -91,6 +110,7 @@ export interface ServerToClientEvents {
   'draw:cleared': () => void;
   'emoji:received': (data: { emoji: string; position: CursorPosition }) => void;
   'ping:received': (data: { position: CursorPosition; color: string; name: string }) => void;
+  'draw:shape': (data: ShapeData) => void;
 }
 
 export interface ClientToServerEvents {
@@ -103,4 +123,5 @@ export interface ClientToServerEvents {
   'room:list': () => void;
   'emoji:send': (payload: EmojiPayload) => void;
   'ping:send': (payload: PingPayload) => void;
+  'draw:shape': (payload: ShapePayload) => void;
 }

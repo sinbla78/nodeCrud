@@ -12,7 +12,9 @@ import {
   DrawData,
   RoomInfo,
   EmojiPayload,
-  PingPayload
+  PingPayload,
+  ShapePayload,
+  ShapeData
 } from '../types/cursor';
 import { generateUserInfo } from '../../utils/colorGenerator';
 
@@ -209,6 +211,24 @@ export function setupCursorHandler(
       color: userData.user.color,
       name: userData.user.name
     });
+  });
+
+  socket.on('draw:shape', (payload: ShapePayload) => {
+    if (!currentRoom || !userData) return;
+
+    const now = Date.now();
+    const shapeData: ShapeData = {
+      id: `${socket.id}-${now}-${Math.random().toString(36).substr(2, 9)}`,
+      user: userData.user,
+      shape: payload.shape,
+      from: payload.from,
+      to: payload.to,
+      color: payload.color,
+      width: payload.width,
+      timestamp: now
+    };
+
+    io.to(currentRoom).emit('draw:shape', shapeData);
   });
 
   socket.on('disconnect', () => {

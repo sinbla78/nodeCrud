@@ -310,6 +310,37 @@
       background: #f59e0b;
     }
 
+    /* Shape Tools */
+    .shape-tools {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .shape-btn {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .shape-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .shape-btn.active {
+      border-color: white;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -725,6 +756,12 @@
   </div>
 
   <div class="draw-tools">
+    <div class="shape-tools">
+      <button class="shape-btn active" data-shape="free" onclick="setShape('free')" title="자유 그리기">✏️</button>
+      <button class="shape-btn" data-shape="line" onclick="setShape('line')" title="직선">╱</button>
+      <button class="shape-btn" data-shape="rect" onclick="setShape('rect')" title="사각형">▢</button>
+      <button class="shape-btn" data-shape="circle" onclick="setShape('circle')" title="원">○</button>
+    </div>
     <div class="color-picker" id="colorPicker"></div>
     <div class="brush-size">
       <span>굵기</span>
@@ -843,6 +880,8 @@
     let lastPos = null;
     const drawings = new Map();
     let pointerMode = false;
+    let currentShape = 'free';
+    let shapeStartPos = null;
 
     // Initialize canvas
     function resizeCanvas() {
@@ -965,6 +1004,18 @@
 
     socket.on('draw:line', (data) => {
       drawings.set(data.id, {
+        type: 'line',
+        from: data.from,
+        to: data.to,
+        color: data.color,
+        width: data.width,
+        timestamp: data.timestamp
+      });
+    });
+
+    socket.on('draw:shape', (data) => {
+      drawings.set(data.id, {
+        type: data.shape,
         from: data.from,
         to: data.to,
         color: data.color,
@@ -1075,12 +1126,35 @@
       ctx.globalAlpha = 1;
     }
 
+    function drawShape(shape, from, to, color, width, opacity = 1) {
+      ctx.beginPath();
+      ctx.globalAlpha = opacity;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if (shape === 'line') {
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+      } else if (shape === 'rect') {
+        ctx.rect(from.x, from.y, to.x - from.x, to.y - from.y);
+      } else if (shape === 'circle') {
+        const radius = Math.sqrt(Math.pow(to.x - from.x, 2) + Math.pow(to.y - from.y, 2));
+        ctx.arc(from.x, from.y, radius, 0, Math.PI * 2);
+      }
+
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
     // 애니메이션 루프 - 그림 페이드 아웃
     function renderCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const now = Date.now();
 
       drawings.forEach((drawing, id) => {
+        let opacity = 1;
         if (fadeEnabled) {
           const age = now - drawing.timestamp;
           if (age >= drawExpireMs) {
@@ -1088,13 +1162,15 @@
             return;
           }
           const fadeStart = drawExpireMs * 0.7;
-          let opacity = 1;
           if (age > fadeStart) {
             opacity = 1 - ((age - fadeStart) / (drawExpireMs * 0.3));
           }
+        }
+
+        if (drawing.type === 'line' || !drawing.type) {
           drawLine(drawing.from, drawing.to, drawing.color, drawing.width, opacity);
         } else {
-          drawLine(drawing.from, drawing.to, drawing.color, drawing.width, 1);
+          drawShape(drawing.type, drawing.from, drawing.to, drawing.color, drawing.width, opacity);
         }
       });
 
@@ -1105,28 +1181,46 @@
     canvas.addEventListener('mousedown', (e) => {
       isDrawing = true;
       lastPos = { x: e.clientX, y: e.clientY };
+      if (currentShape !== 'free') {
+        shapeStartPos = { x: e.clientX, y: e.clientY };
+      }
     });
 
     canvas.addEventListener('mousemove', (e) => {
       if (!isDrawing || !lastPos) return;
       const currentPos = { x: e.clientX, y: e.clientY };
-      socket.emit('draw:line', {
-        from: lastPos,
-        to: currentPos,
-        color: drawColor,
-        width: brushSize
-      });
-      lastPos = currentPos;
+
+      if (currentShape === 'free') {
+        socket.emit('draw:line', {
+          from: lastPos,
+          to: currentPos,
+          color: drawColor,
+          width: brushSize
+        });
+        lastPos = currentPos;
+      }
     });
 
-    canvas.addEventListener('mouseup', () => {
+    canvas.addEventListener('mouseup', (e) => {
+      if (isDrawing && shapeStartPos && currentShape !== 'free') {
+        const endPos = { x: e.clientX, y: e.clientY };
+        socket.emit('draw:shape', {
+          shape: currentShape,
+          from: shapeStartPos,
+          to: endPos,
+          color: drawColor,
+          width: brushSize
+        });
+      }
       isDrawing = false;
       lastPos = null;
+      shapeStartPos = null;
     });
 
     canvas.addEventListener('mouseleave', () => {
       isDrawing = false;
       lastPos = null;
+      shapeStartPos = null;
     });
 
     function clearCanvas() {
@@ -1224,6 +1318,14 @@
     roomModalEl.addEventListener('click', (e) => {
       if (e.target === roomModalEl) closeRoomModal();
     });
+
+    // Shape tools
+    function setShape(shape) {
+      currentShape = shape;
+      document.querySelectorAll('.shape-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.shape === shape);
+      });
+    }
 
     // Pointer mode
     function togglePointerMode() {
