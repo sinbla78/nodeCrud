@@ -251,6 +251,65 @@
       }
     }
 
+    /* Pointer/Ping Effect */
+    .ping-effect {
+      position: absolute;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 1500;
+    }
+
+    .ping-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 3px solid;
+      animation: pingPulse 1.5s ease-out infinite;
+    }
+
+    .ping-label {
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      white-space: nowrap;
+      color: white;
+      font-weight: 500;
+    }
+
+    @keyframes pingPulse {
+      0% {
+        transform: scale(0.5);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+
+    .pointer-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+
+    .pointer-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .pointer-btn.active {
+      background: #f59e0b;
+    }
+
     /* My Info */
     .my-info {
       position: fixed;
@@ -686,6 +745,7 @@
       </select>
     </div>
     <button class="clear-btn" onclick="clearCanvas()">캔버스 지우기</button>
+    <button class="pointer-btn" id="pointerBtn" onclick="togglePointerMode()">📍 여기 봐</button>
   </div>
 
   <div class="instructions">
@@ -782,6 +842,7 @@
     let isDrawing = false;
     let lastPos = null;
     const drawings = new Map();
+    let pointerMode = false;
 
     // Initialize canvas
     function resizeCanvas() {
@@ -1086,7 +1147,11 @@
     });
 
     document.addEventListener('click', (e) => {
-      if (e.target.closest('.chat-panel, .draw-tools, .status-bar, .modal-overlay, .my-info')) return;
+      if (e.target.closest('.chat-panel, .draw-tools, .status-bar, .modal-overlay, .my-info, .emoji-bar, .user-list-panel')) return;
+      if (pointerMode) {
+        sendPing(e.clientX, e.clientY);
+        return;
+      }
       socket.emit('cursor:click', { position: { x: e.clientX, y: e.clientY } });
       createClickEffect(e.clientX, e.clientY, myColor);
     });
@@ -1158,6 +1223,36 @@
 
     roomModalEl.addEventListener('click', (e) => {
       if (e.target === roomModalEl) closeRoomModal();
+    });
+
+    // Pointer mode
+    function togglePointerMode() {
+      pointerMode = !pointerMode;
+      const btn = document.getElementById('pointerBtn');
+      btn.classList.toggle('active', pointerMode);
+      canvas.style.cursor = pointerMode ? 'crosshair' : 'crosshair';
+    }
+
+    function sendPing(x, y) {
+      socket.emit('ping:send', { position: { x, y } });
+      showPingEffect(x, y, myColor, myUserInfo?.name || '나');
+    }
+
+    function showPingEffect(x, y, color, name) {
+      const ping = document.createElement('div');
+      ping.className = 'ping-effect';
+      ping.innerHTML = `
+        <div class="ping-circle" style="border-color: ${color}"></div>
+        <div class="ping-label" style="background: ${color}">${name}</div>
+      `;
+      ping.style.left = x + 'px';
+      ping.style.top = y + 'px';
+      document.body.appendChild(ping);
+      setTimeout(() => ping.remove(), 3000);
+    }
+
+    socket.on('ping:received', (data) => {
+      showPingEffect(data.position.x, data.position.y, data.color, data.name);
     });
 
     // Emoji reactions

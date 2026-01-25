@@ -11,7 +11,8 @@ import {
   DrawPayload,
   DrawData,
   RoomInfo,
-  EmojiPayload
+  EmojiPayload,
+  PingPayload
 } from '../types/cursor';
 import { generateUserInfo } from '../../utils/colorGenerator';
 
@@ -197,6 +198,16 @@ export function setupCursorHandler(
     socket.to(currentRoom).emit('emoji:received', {
       emoji: payload.emoji,
       position
+    });
+  });
+
+  socket.on('ping:send', (payload: PingPayload) => {
+    if (!currentRoom || !userData) return;
+
+    socket.to(currentRoom).emit('ping:received', {
+      position: payload.position,
+      color: userData.user.color,
+      name: userData.user.name
     });
   });
 
