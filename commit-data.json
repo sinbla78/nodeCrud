@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-27T00:19:15.000Z",
-  "commitCount": 156,
-  "message": "chore :: update dependencies",
+  "lastUpdate": "2026-01-27T07:14:52.000Z",
+  "commitCount": 157,
+  "message": "fix :: correct logic flow",
   "history": [
-    {
-      "date": "2026-01-20T04:24:53.000Z",
-      "message": "refactor :: restructure code",
-      "timestamp": 1768912330051
-    },
     {
       "date": "2026-01-20T11:07:46.000Z",
       "message": "chore :: code maintenance",
@@ -502,6 +497,11 @@
       "date": "2026-01-27T00:19:15.000Z",
       "message": "chore :: update dependencies",
       "timestamp": 1769512608379
+    },
+    {
+      "date": "2026-01-27T07:14:52.000Z",
+      "message": "fix :: correct logic flow",
+      "timestamp": 1769512609966
     }
   ]
 }
