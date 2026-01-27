@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-27T12:29:19.000Z",
-  "commitCount": 151,
-  "message": "docs :: update changelog",
+  "lastUpdate": "2026-01-27T08:38:26.000Z",
+  "commitCount": 152,
+  "message": "build :: update build config",
   "history": [
-    {
-      "date": "2026-01-20T08:01:39.000Z",
-      "message": "Apply DRY principle",
-      "timestamp": 1768911992539
-    },
     {
       "date": "2026-01-20T06:29:41.000Z",
       "message": "Resolve race condition",
@@ -502,6 +497,11 @@
       "date": "2026-01-27T12:29:19.000Z",
       "message": "docs :: update changelog",
       "timestamp": 1769512604995
+    },
+    {
+      "date": "2026-01-27T08:38:26.000Z",
+      "message": "build :: update build config",
+      "timestamp": 1769512606622
     }
   ]
 }
