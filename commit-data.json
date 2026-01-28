@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-28T02:33:24.000Z",
-  "commitCount": 165,
-  "message": "docs :: update README",
+  "lastUpdate": "2026-01-28T01:49:10.000Z",
+  "commitCount": 166,
+  "message": "feat :: add helper functions",
   "history": [
-    {
-      "date": "2025-01-21T03:23:32.000Z",
-      "message": "chore :: minor improvements",
-      "timestamp": 1768997374589
-    },
     {
       "date": "2025-01-21T09:38:44.000Z",
       "message": "refactor :: extract common logic",
@@ -502,6 +497,11 @@
       "date": "2026-01-28T02:33:24.000Z",
       "message": "docs :: update README",
       "timestamp": 1769601424309
+    },
+    {
+      "date": "2026-01-28T01:49:10.000Z",
+      "message": "feat :: add helper functions",
+      "timestamp": 1769601424337
     }
   ]
 }
