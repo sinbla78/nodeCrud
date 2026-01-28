@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-29T05:24:28.000Z",
-  "commitCount": 171,
-  "message": "fix :: resolve bug",
+  "lastUpdate": "2026-01-28T11:40:30.000Z",
+  "commitCount": 172,
+  "message": "docs :: add usage examples",
   "history": [
-    {
-      "date": "2025-01-21T02:16:57.000Z",
-      "message": "refactor :: extract common logic",
-      "timestamp": 1768997378223
-    },
     {
       "date": "2026-01-21T03:52:31.000Z",
       "message": "fix :: resolve memory leak",
@@ -502,6 +497,11 @@
       "date": "2026-01-29T05:24:28.000Z",
       "message": "fix :: resolve bug",
       "timestamp": 1769687188536
+    },
+    {
+      "date": "2026-01-28T11:40:30.000Z",
+      "message": "docs :: add usage examples",
+      "timestamp": 1769687189989
     }
   ]
 }
