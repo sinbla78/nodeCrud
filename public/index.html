@@ -647,6 +647,23 @@
       background: rgba(255, 255, 255, 0.25);
     }
 
+    /* Download Button */
+    .download-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .download-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
     .game-modal {
       position: fixed;
       top: 0;
@@ -1171,6 +1188,7 @@
       </select>
     </div>
     <button class="game-btn" onclick="openGame()">🏓 게임</button>
+    <button class="download-btn" onclick="downloadCanvas()">💾 다운로드</button>
   </div>
 
   <div class="instructions">
@@ -2352,6 +2370,80 @@
     socket.on('note:list', (notes) => {
       notes.forEach(createStickyNote);
     });
+
+    // Download canvas as image
+    function downloadCanvas() {
+      // Create a temporary canvas for download
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+
+      // Fill background color
+      const bgStyle = document.body.style.background || 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+      if (bgStyle.includes('gradient')) {
+        // Handle gradient background
+        const gradient = tempCtx.createLinearGradient(0, 0, tempCanvas.width, tempCanvas.height);
+        gradient.addColorStop(0, '#1a1a2e');
+        gradient.addColorStop(1, '#16213e');
+        tempCtx.fillStyle = gradient;
+      } else {
+        tempCtx.fillStyle = bgStyle;
+      }
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+      // Draw all drawings
+      drawings.forEach((drawing) => {
+        tempCtx.beginPath();
+        tempCtx.strokeStyle = drawing.color;
+        tempCtx.lineWidth = drawing.width;
+        tempCtx.lineCap = 'round';
+        tempCtx.lineJoin = 'round';
+
+        if (drawing.type === 'smooth' && drawing.points) {
+          // Draw smooth line
+          if (drawing.points.length >= 2) {
+            tempCtx.moveTo(drawing.points[0].x, drawing.points[0].y);
+            for (let i = 1; i < drawing.points.length - 1; i++) {
+              const midX = (drawing.points[i].x + drawing.points[i + 1].x) / 2;
+              const midY = (drawing.points[i].y + drawing.points[i + 1].y) / 2;
+              tempCtx.quadraticCurveTo(drawing.points[i].x, drawing.points[i].y, midX, midY);
+            }
+            const last = drawing.points[drawing.points.length - 1];
+            tempCtx.lineTo(last.x, last.y);
+          }
+        } else if (drawing.type === 'line' || !drawing.type) {
+          // Draw regular line
+          tempCtx.moveTo(drawing.from.x, drawing.from.y);
+          tempCtx.lineTo(drawing.to.x, drawing.to.y);
+        } else if (drawing.type === 'rect') {
+          tempCtx.rect(drawing.from.x, drawing.from.y, drawing.to.x - drawing.from.x, drawing.to.y - drawing.from.y);
+        } else if (drawing.type === 'circle') {
+          const radius = Math.sqrt(Math.pow(drawing.to.x - drawing.from.x, 2) + Math.pow(drawing.to.y - drawing.from.y, 2));
+          tempCtx.arc(drawing.from.x, drawing.from.y, radius, 0, Math.PI * 2);
+        } else {
+          // Other shapes (line shape)
+          tempCtx.moveTo(drawing.from.x, drawing.from.y);
+          tempCtx.lineTo(drawing.to.x, drawing.to.y);
+        }
+        tempCtx.stroke();
+      });
+
+      // Create download link
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+      link.download = `canvas-${currentRoom}-${timestamp}.png`;
+      link.href = tempCanvas.toDataURL('image/png');
+      link.click();
+
+      // Show feedback
+      const btn = document.querySelector('.download-btn');
+      const originalText = btn.textContent;
+      btn.textContent = '✓ 저장됨!';
+      setTimeout(() => {
+        btn.textContent = originalText;
+      }, 2000);
+    }
 
     // Copy room link
     function copyRoomLink() {
