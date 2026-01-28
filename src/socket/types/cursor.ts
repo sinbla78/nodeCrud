@@ -96,6 +96,22 @@ export interface ShapeData {
   timestamp: number;
 }
 
+export interface SmoothDrawPayload {
+  points: CursorPosition[];
+  color: string;
+  width: number;
+}
+
+export interface SmoothDrawData {
+  id: string;
+  user: UserInfo;
+  type: 'smooth';
+  points: CursorPosition[];
+  color: string;
+  width: number;
+  timestamp: number;
+}
+
 export interface NoteData {
   id: string;
   x: number;
@@ -166,6 +182,7 @@ export interface ServerToClientEvents {
   'chat:message': (data: ChatMessage) => void;
   'chat:history': (messages: ChatMessage[]) => void;
   'draw:line': (data: DrawData) => void;
+  'draw:smooth': (data: SmoothDrawData) => void;
   'draw:history': (lines: DrawData[]) => void;
   'draw:cleared': () => void;
   'draw:undone': (data: { id: string }) => void;
@@ -190,6 +207,7 @@ export interface ClientToServerEvents {
   'cursor:click': (payload: ClickPayload) => void;
   'chat:send': (payload: ChatPayload) => void;
   'draw:line': (payload: DrawPayload) => void;
+  'draw:smooth': (payload: SmoothDrawPayload) => void;
   'draw:clear': () => void;
   'draw:undo': (payload: { id: string }) => void;
   'draw:redo': (payload: { id: string; data: any }) => void;

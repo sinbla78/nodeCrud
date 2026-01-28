@@ -15,6 +15,8 @@ import {
   PingPayload,
   ShapePayload,
   ShapeData,
+  SmoothDrawPayload,
+  SmoothDrawData,
   NoteData,
   NoteAddPayload,
   NoteMovePayload,
@@ -278,6 +280,23 @@ export function setupCursorHandler(
     };
 
     io.to(currentRoom).emit('draw:shape', shapeData);
+  });
+
+  socket.on('draw:smooth', (payload: SmoothDrawPayload) => {
+    if (!currentRoom || !userData) return;
+
+    const now = Date.now();
+    const smoothData: SmoothDrawData = {
+      id: `${socket.id}-${now}-${Math.random().toString(36).substr(2, 9)}`,
+      user: userData.user,
+      type: 'smooth',
+      points: payload.points,
+      color: payload.color,
+      width: payload.width,
+      timestamp: now
+    };
+
+    io.to(currentRoom).emit('draw:smooth', smoothData);
   });
 
   socket.on('note:add', (payload: NoteAddPayload) => {

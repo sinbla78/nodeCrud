@@ -1293,6 +1293,12 @@
     let cursorEffect = 'none';
     let particleCounter = 0;
 
+    // Smooth drawing
+    let smoothPoints = [];
+
+    // Shape preview
+    let previewShape = null;
+
     // Sound effects using Web Audio API
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -1579,6 +1585,21 @@
       }
     });
 
+    socket.on('draw:smooth', (data) => {
+      drawings.set(data.id, {
+        type: 'smooth',
+        points: data.points,
+        color: data.color,
+        width: data.width,
+        timestamp: data.timestamp
+      });
+      if (data.user && data.user.id === socket.id) {
+        myDrawingIds.push(data.id);
+        redoStack.length = 0;
+        updateUndoRedoButtons();
+      }
+    });
+
     socket.on('draw:history', (lines) => {
       drawings.clear();
       lines.forEach(line => {
@@ -1721,6 +1742,32 @@
       ctx.globalAlpha = 1;
     }
 
+    // Smooth line drawing using quadratic bezier curves
+    function drawSmoothLine(points, color, width, opacity = 1) {
+      if (points.length < 2) return;
+
+      ctx.beginPath();
+      ctx.globalAlpha = opacity;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      ctx.moveTo(points[0].x, points[0].y);
+
+      for (let i = 1; i < points.length - 1; i++) {
+        const midX = (points[i].x + points[i + 1].x) / 2;
+        const midY = (points[i].y + points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
+      }
+
+      // Connect to the last point
+      const last = points[points.length - 1];
+      ctx.lineTo(last.x, last.y);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
     // 애니메이션 루프 - 그림 페이드 아웃
     function renderCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1742,10 +1789,24 @@
 
         if (drawing.type === 'line' || !drawing.type) {
           drawLine(drawing.from, drawing.to, drawing.color, drawing.width, opacity);
+        } else if (drawing.type === 'smooth' && drawing.points) {
+          drawSmoothLine(drawing.points, drawing.color, drawing.width, opacity);
         } else {
           drawShape(drawing.type, drawing.from, drawing.to, drawing.color, drawing.width, opacity);
         }
       });
+
+      // Draw shape preview (semi-transparent)
+      if (previewShape) {
+        drawShape(
+          previewShape.shape,
+          previewShape.from,
+          previewShape.to,
+          previewShape.color,
+          previewShape.width,
+          0.5
+        );
+      }
 
       requestAnimationFrame(renderCanvas);
     }
@@ -1754,7 +1815,10 @@
     canvas.addEventListener('mousedown', (e) => {
       isDrawing = true;
       lastPos = { x: e.clientX, y: e.clientY };
-      if (currentShape !== 'free') {
+      if (currentShape === 'free') {
+        // Initialize smooth points for free drawing
+        smoothPoints = [{ x: e.clientX, y: e.clientY }];
+      } else {
         shapeStartPos = { x: e.clientX, y: e.clientY };
       }
     });
@@ -1764,6 +1828,10 @@
       const currentPos = { x: e.clientX, y: e.clientY };
 
       if (currentShape === 'free') {
+        // Collect points for smooth drawing
+        smoothPoints.push(currentPos);
+
+        // Still emit line for real-time sync with others
         socket.emit('draw:line', {
           from: lastPos,
           to: currentPos,
@@ -1771,11 +1839,27 @@
           width: brushSize
         });
         lastPos = currentPos;
+      } else {
+        // Update shape preview for real-time feedback
+        previewShape = {
+          shape: currentShape,
+          from: shapeStartPos,
+          to: currentPos,
+          color: drawColor,
+          width: brushSize
+        };
       }
     });
 
     canvas.addEventListener('mouseup', (e) => {
-      if (isDrawing && shapeStartPos && currentShape !== 'free') {
+      if (isDrawing && currentShape === 'free' && smoothPoints.length > 2) {
+        // Emit smooth line data for better rendering
+        socket.emit('draw:smooth', {
+          points: smoothPoints,
+          color: drawColor,
+          width: brushSize
+        });
+      } else if (isDrawing && shapeStartPos && currentShape !== 'free') {
         const endPos = { x: e.clientX, y: e.clientY };
         socket.emit('draw:shape', {
           shape: currentShape,
@@ -1788,12 +1872,16 @@
       isDrawing = false;
       lastPos = null;
       shapeStartPos = null;
+      smoothPoints = [];
+      previewShape = null;
     });
 
     canvas.addEventListener('mouseleave', () => {
       isDrawing = false;
       lastPos = null;
       shapeStartPos = null;
+      smoothPoints = [];
+      previewShape = null;
     });
 
     function clearCanvas() {
