@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-28T03:15:22.000Z",
-  "commitCount": 176,
-  "message": "build :: update build config",
+  "lastUpdate": "2026-01-28T12:51:03.000Z",
+  "commitCount": 177,
+  "message": "docs :: add troubleshooting guide",
   "history": [
-    {
-      "date": "2026-01-21T12:29:44.000Z",
-      "message": "docs :: add troubleshooting guide",
-      "timestamp": 1768997580565
-    },
     {
       "date": "2026-01-21T01:27:51.000Z",
       "message": "feat :: create service layer",
@@ -502,6 +497,11 @@
       "date": "2026-01-28T03:15:22.000Z",
       "message": "build :: update build config",
       "timestamp": 1769687195163
+    },
+    {
+      "date": "2026-01-28T12:51:03.000Z",
+      "message": "docs :: add troubleshooting guide",
+      "timestamp": 1769687195186
     }
   ]
 }
