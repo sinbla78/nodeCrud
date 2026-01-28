@@ -802,6 +802,49 @@
       border-color: white;
     }
 
+    /* Custom Color Picker */
+    .custom-color-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .custom-color-input {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      padding: 0;
+      background: none;
+      overflow: hidden;
+    }
+
+    .custom-color-input::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .custom-color-input::-webkit-color-swatch {
+      border: 2px solid transparent;
+      border-radius: 50%;
+    }
+
+    .custom-color-input::-moz-color-swatch {
+      border: 2px solid transparent;
+      border-radius: 50%;
+    }
+
+    .custom-color-input:hover {
+      transform: scale(1.2);
+    }
+
+    .custom-color-input.active::-webkit-color-swatch {
+      border-color: white;
+    }
+
+    .custom-color-input.active::-moz-color-swatch {
+      border-color: white;
+    }
+
     .brush-size {
       display: flex;
       align-items: center;
@@ -1294,7 +1337,7 @@
     const userListEl = document.getElementById('userList');
 
     // Drawing state
-    const DRAW_COLORS = ['#ffffff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#ff69b4'];
+    const DRAW_COLORS = ['#ffffff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#ff69b4', '#a55eea'];
     let drawExpireMs = 10000;
     let fadeEnabled = true;
     let drawColor = '#ffffff';
@@ -1434,10 +1477,31 @@
       btn.style.background = color;
       btn.onclick = () => {
         document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('customColorPicker').classList.remove('active');
         btn.classList.add('active');
         drawColor = color;
       };
       colorPickerEl.appendChild(btn);
+    });
+
+    // Custom color picker
+    const customColorContainer = document.createElement('div');
+    customColorContainer.className = 'custom-color-container';
+    customColorContainer.innerHTML = `
+      <input type="color" id="customColorPicker" class="custom-color-input" value="#00ff00" title="사용자 지정 색상">
+    `;
+    colorPickerEl.appendChild(customColorContainer);
+
+    const customColorInput = document.getElementById('customColorPicker');
+    customColorInput.addEventListener('input', (e) => {
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+      customColorInput.classList.add('active');
+      drawColor = e.target.value;
+    });
+    customColorInput.addEventListener('click', () => {
+      document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+      customColorInput.classList.add('active');
+      drawColor = customColorInput.value;
     });
 
     document.getElementById('brushSize').addEventListener('input', (e) => {
