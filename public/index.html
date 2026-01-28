@@ -808,41 +808,50 @@
       align-items: center;
     }
 
-    .custom-color-input {
+    .custom-color-wrapper {
+      position: relative;
       width: 24px;
       height: 24px;
+      border-radius: 50%;
+      background: conic-gradient(
+        red, yellow, lime, aqua, blue, magenta, red
+      );
+      padding: 2px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .custom-color-wrapper:hover {
+      transform: scale(1.2);
+    }
+
+    .custom-color-wrapper.active {
+      box-shadow: 0 0 0 2px white;
+    }
+
+    .custom-color-input {
+      width: 100%;
+      height: 100%;
       border: none;
       border-radius: 50%;
       cursor: pointer;
       padding: 0;
-      background: none;
-      overflow: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
 
-    .custom-color-input::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-
-    .custom-color-input::-webkit-color-swatch {
-      border: 2px solid transparent;
-      border-radius: 50%;
-    }
-
-    .custom-color-input::-moz-color-swatch {
-      border: 2px solid transparent;
-      border-radius: 50%;
-    }
-
-    .custom-color-input:hover {
-      transform: scale(1.2);
-    }
-
-    .custom-color-input.active::-webkit-color-swatch {
-      border-color: white;
-    }
-
-    .custom-color-input.active::-moz-color-swatch {
-      border-color: white;
+    .custom-color-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      text-shadow: 0 0 3px rgba(0,0,0,0.8);
+      pointer-events: none;
     }
 
     .brush-size {
@@ -1477,7 +1486,7 @@
       btn.style.background = color;
       btn.onclick = () => {
         document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('customColorPicker').classList.remove('active');
+        document.querySelector('.custom-color-wrapper')?.classList.remove('active');
         btn.classList.add('active');
         drawColor = color;
       };
@@ -1488,19 +1497,23 @@
     const customColorContainer = document.createElement('div');
     customColorContainer.className = 'custom-color-container';
     customColorContainer.innerHTML = `
-      <input type="color" id="customColorPicker" class="custom-color-input" value="#00ff00" title="사용자 지정 색상">
+      <div class="custom-color-wrapper" title="사용자 지정 색상">
+        <input type="color" id="customColorPicker" class="custom-color-input" value="#00ff00">
+        <span class="custom-color-icon">+</span>
+      </div>
     `;
     colorPickerEl.appendChild(customColorContainer);
 
     const customColorInput = document.getElementById('customColorPicker');
+    const customColorWrapper = customColorInput.parentElement;
     customColorInput.addEventListener('input', (e) => {
       document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-      customColorInput.classList.add('active');
+      customColorWrapper.classList.add('active');
       drawColor = e.target.value;
     });
     customColorInput.addEventListener('click', () => {
       document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-      customColorInput.classList.add('active');
+      customColorWrapper.classList.add('active');
       drawColor = customColorInput.value;
     });
 
