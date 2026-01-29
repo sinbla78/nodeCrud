@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-29T10:40:45.000Z",
-  "commitCount": 186,
-  "message": "chore :: update tsconfig",
+  "lastUpdate": "2026-01-29T12:01:05.000Z",
+  "commitCount": 187,
+  "message": "docs :: improve inline docs",
   "history": [
-    {
-      "date": "2025-01-22T01:34:24.000Z",
-      "message": "chore :: configure linter",
-      "timestamp": 1769085393523
-    },
     {
       "date": "2025-01-22T10:57:50.000Z",
       "message": "build :: update build config",
@@ -502,6 +497,11 @@
       "date": "2026-01-29T10:40:45.000Z",
       "message": "chore :: update tsconfig",
       "timestamp": 1769772516392
+    },
+    {
+      "date": "2026-01-29T12:01:05.000Z",
+      "message": "docs :: improve inline docs",
+      "timestamp": 1769772516414
     }
   ]
 }
