@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-30T00:36:28.000Z",
-  "commitCount": 191,
-  "message": "refactor :: restructure code",
+  "lastUpdate": "2026-01-30T06:28:38.000Z",
+  "commitCount": 192,
+  "message": "docs :: improve inline docs",
   "history": [
-    {
-      "date": "2025-01-22T05:03:30.000Z",
-      "message": "fix :: resolve type error",
-      "timestamp": 1769085396952
-    },
     {
       "date": "2025-01-23T12:38:52.000Z",
       "message": "refactor :: simplify implementation",
@@ -502,6 +497,11 @@
       "date": "2026-01-30T00:36:28.000Z",
       "message": "refactor :: restructure code",
       "timestamp": 1769772523467
+    },
+    {
+      "date": "2026-01-30T06:28:38.000Z",
+      "message": "docs :: improve inline docs",
+      "timestamp": 1769772523491
     }
   ]
 }
