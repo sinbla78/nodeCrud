@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-30T12:45:48.000Z",
-  "commitCount": 197,
-  "message": "test :: add integration tests",
+  "lastUpdate": "2026-01-30T09:58:42.000Z",
+  "commitCount": 198,
+  "message": "refactor :: extract common logic",
   "history": [
-    {
-      "date": "2025-01-23T11:23:36.000Z",
-      "message": "chore :: update dependencies",
-      "timestamp": 1769170600594
-    },
     {
       "date": "2025-01-23T03:06:38.000Z",
       "message": "fix :: resolve race condition",
@@ -502,6 +497,11 @@
       "date": "2026-01-30T12:45:48.000Z",
       "message": "test :: add integration tests",
       "timestamp": 1769772527105
+    },
+    {
+      "date": "2026-01-30T09:58:42.000Z",
+      "message": "refactor :: extract common logic",
+      "timestamp": 1769772527126
     }
   ]
 }
