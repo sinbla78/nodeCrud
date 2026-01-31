@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-31T03:31:49.000Z",
-  "commitCount": 211,
-  "message": "docs :: add troubleshooting guide",
+  "lastUpdate": "2026-01-31T09:18:11.000Z",
+  "commitCount": 212,
+  "message": "refactor :: reorganize modules",
   "history": [
-    {
-      "date": "2026-01-23T04:15:05.000Z",
-      "message": "docs :: document configuration",
-      "timestamp": 1769170640845
-    },
     {
       "date": "2026-01-23T02:18:12.000Z",
       "message": "fix :: resolve type error",
@@ -502,6 +497,11 @@
       "date": "2026-01-31T03:31:49.000Z",
       "message": "docs :: add troubleshooting guide",
       "timestamp": 1769935212045
+    },
+    {
+      "date": "2026-01-31T09:18:11.000Z",
+      "message": "refactor :: reorganize modules",
+      "timestamp": 1769935212068
     }
   ]
 }
