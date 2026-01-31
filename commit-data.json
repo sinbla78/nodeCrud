@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-31T04:18:40.000Z",
-  "commitCount": 199,
-  "message": "fix :: correct calculation",
+  "lastUpdate": "2026-01-31T01:09:43.000Z",
+  "commitCount": 200,
+  "message": "refactor :: reduce complexity",
   "history": [
-    {
-      "date": "2025-01-23T12:25:30.000Z",
-      "message": "docs :: add code comments",
-      "timestamp": 1769170600655
-    },
     {
       "date": "2025-01-23T08:31:20.000Z",
       "message": "docs :: update changelog",
@@ -502,6 +497,11 @@
       "date": "2026-01-31T04:18:40.000Z",
       "message": "fix :: correct calculation",
       "timestamp": 1769858848253
+    },
+    {
+      "date": "2026-01-31T01:09:43.000Z",
+      "message": "refactor :: reduce complexity",
+      "timestamp": 1769858848279
     }
   ]
 }
