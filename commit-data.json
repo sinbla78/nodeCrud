@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-31T01:51:18.000Z",
-  "commitCount": 217,
-  "message": "chore :: update environment config",
+  "lastUpdate": "2026-02-01T05:27:32.000Z",
+  "commitCount": 218,
+  "message": "refactor :: simplify implementation",
   "history": [
-    {
-      "date": "2026-01-22T06:20:45.000Z",
-      "message": "chore :: update configuration",
-      "timestamp": 1769170649816
-    },
     {
       "date": "2026-01-22T09:06:14.000Z",
       "message": "docs :: add troubleshooting guide",
@@ -502,6 +497,11 @@
       "date": "2026-01-31T01:51:18.000Z",
       "message": "chore :: update environment config",
       "timestamp": 1769935218532
+    },
+    {
+      "date": "2026-02-01T05:27:32.000Z",
+      "message": "refactor :: simplify implementation",
+      "timestamp": 1769935218555
     }
   ]
 }
