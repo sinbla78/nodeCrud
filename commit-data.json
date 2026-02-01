@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-01-31T02:53:02.000Z",
-  "commitCount": 214,
-  "message": "perf :: optimize performance",
+  "lastUpdate": "2026-02-01T04:36:09.000Z",
+  "commitCount": 215,
+  "message": "feat :: create service layer",
   "history": [
-    {
-      "date": "2026-01-22T07:48:50.000Z",
-      "message": "fix :: correct logic flow",
-      "timestamp": 1769170649740
-    },
     {
       "date": "2026-01-22T03:58:21.000Z",
       "message": "docs :: update changelog",
@@ -502,6 +497,11 @@
       "date": "2026-01-31T02:53:02.000Z",
       "message": "perf :: optimize performance",
       "timestamp": 1769935212117
+    },
+    {
+      "date": "2026-02-01T04:36:09.000Z",
+      "message": "feat :: create service layer",
+      "timestamp": 1769935212139
     }
   ]
 }
