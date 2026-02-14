@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-02-14T06:21:07.000Z",
-  "commitCount": 226,
-  "message": "docs :: improve inline docs",
+  "lastUpdate": "2026-02-14T10:15:52.000Z",
+  "commitCount": 227,
+  "message": "refactor :: improve code structure",
   "history": [
-    {
-      "date": "2026-01-24T08:27:19.000Z",
-      "message": "chore :: add gitignore entries",
-      "timestamp": 1769255258452
-    },
     {
       "date": "2026-01-24T04:27:19.000Z",
       "message": "docs :: update contributing guide",
@@ -502,6 +497,11 @@
       "date": "2026-02-14T06:21:07.000Z",
       "message": "docs :: improve inline docs",
       "timestamp": 1772148862543
+    },
+    {
+      "date": "2026-02-14T10:15:52.000Z",
+      "message": "refactor :: improve code structure",
+      "timestamp": 1772148862571
     }
   ]
 }
