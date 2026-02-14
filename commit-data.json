@@ -1,13 +1,8 @@
 {
-  "lastUpdate": "2026-02-14T03:48:14.000Z",
-  "commitCount": 228,
-  "message": "fix :: resolve bug",
+  "lastUpdate": "2026-02-14T06:51:46.000Z",
+  "commitCount": 229,
+  "message": "build :: update build config",
   "history": [
-    {
-      "date": "2026-01-24T11:23:13.000Z",
-      "message": "chore :: update tsconfig",
-      "timestamp": 1769255258494
-    },
     {
       "date": "2026-01-24T08:39:16.000Z",
       "message": "fix :: resolve validation error",
@@ -502,6 +497,11 @@
       "date": "2026-02-14T03:48:14.000Z",
       "message": "fix :: resolve bug",
       "timestamp": 1772148862604
+    },
+    {
+      "date": "2026-02-14T06:51:46.000Z",
+      "message": "build :: update build config",
+      "timestamp": 1772148862625
     }
   ]
 }
